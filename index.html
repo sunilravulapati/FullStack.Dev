@@ -1,0 +1,2342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FullStack Dev Notes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #16161f;
+    --border: #1e1e2e;
+    --accent: #7cf2c8;
+    --accent2: #f25f7c;
+    --accent3: #7cb4f2;
+    --accent4: #f2c07c;
+    --text: #e2e2f0;
+    --muted: #6b6b8a;
+    --code-bg: #0d0d14;
+    --line: rgba(124,242,200,0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* Scanline overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.04) 2px,
+      rgba(0,0,0,0.04) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* Ambient glow */
+  .ambient {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.08;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .ambient-1 { width: 600px; height: 600px; background: var(--accent); top: -200px; left: -100px; }
+  .ambient-2 { width: 500px; height: 500px; background: var(--accent2); bottom: -100px; right: -100px; }
+
+  /* ===== SIDEBAR NAV ===== */
+  #sidebar {
+    position: fixed;
+    left: 0; top: 0;
+    width: 260px;
+    height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease;
+  }
+
+  #sidebar::-webkit-scrollbar { width: 4px; }
+  #sidebar::-webkit-scrollbar-track { background: transparent; }
+  #sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .sidebar-header {
+    padding: 28px 20px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--text);
+  }
+
+  .logo span { color: var(--accent); }
+
+  .logo-sub {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .nav-section {
+    padding: 14px 20px 6px;
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .nav-item {
+    display: block;
+    padding: 8px 20px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 12px;
+    transition: all 0.2s;
+    border-left: 2px solid transparent;
+    position: relative;
+  }
+
+  .nav-item::before {
+    content: attr(data-num);
+    font-size: 10px;
+    color: var(--accent);
+    margin-right: 8px;
+    opacity: 0.6;
+  }
+
+  .nav-item:hover, .nav-item.active {
+    color: var(--text);
+    border-left-color: var(--accent);
+    background: rgba(124,242,200,0.04);
+    padding-left: 22px;
+  }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  /* ===== MAIN CONTENT ===== */
+  #main {
+    margin-left: 260px;
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ===== HERO ===== */
+  .hero {
+    padding: 80px 60px 60px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::after {
+    content: '01';
+    position: absolute;
+    right: 60px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Syne', sans-serif;
+    font-size: 180px;
+    font-weight: 800;
+    color: rgba(124,242,200,0.04);
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .hero-eyebrow {
+    font-size: 10px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+
+  .hero-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 52px;
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -2px;
+    margin-bottom: 20px;
+  }
+
+  .hero-title span { color: var(--accent); }
+
+  .hero-desc {
+    max-width: 520px;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.8;
+  }
+
+  .hero-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 24px;
+  }
+
+  .tag {
+    padding: 4px 12px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .tag.accent { border-color: var(--accent); color: var(--accent); }
+  .tag.red { border-color: var(--accent2); color: var(--accent2); }
+  .tag.blue { border-color: var(--accent3); color: var(--accent3); }
+  .tag.yellow { border-color: var(--accent4); color: var(--accent4); }
+
+  /* ===== SECTIONS ===== */
+  .section {
+    padding: 56px 60px;
+    border-bottom: 1px solid var(--border);
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+
+  .section.visible { opacity: 1; transform: translateY(0); }
+
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 32px;
+  }
+
+  .section-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+
+  .section-line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 28px;
+    line-height: 1.2;
+  }
+
+  .section-title .hl { color: var(--accent); }
+  .section-title .hl2 { color: var(--accent2); }
+  .section-title .hl3 { color: var(--accent3); }
+  .section-title .hl4 { color: var(--accent4); }
+
+  /* ===== CONCEPT CARDS ===== */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 20px;
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+
+  .card:hover {
+    border-color: rgba(124,242,200,0.3);
+    transform: translateY(-2px);
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: var(--accent);
+  }
+
+  .card.red::before { background: var(--accent2); }
+  .card.blue::before { background: var(--accent3); }
+  .card.yellow::before { background: var(--accent4); }
+
+  .card-title {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+
+  .card.red .card-title { color: var(--accent2); }
+  .card.blue .card-title { color: var(--accent3); }
+  .card.yellow .card-title { color: var(--accent4); }
+
+  .card p { font-size: 12px; color: var(--muted); line-height: 1.7; }
+  .card strong { color: var(--text); }
+
+  /* ===== METHOD CARDS ===== */
+  .method-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .method-card {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    padding: 16px;
+    border-radius: 4px;
+    transition: border-color 0.2s;
+  }
+
+  .method-card:hover { border-color: rgba(124,242,200,0.25); }
+
+  .method-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent3);
+    margin-bottom: 6px;
+  }
+
+  .method-desc { font-size: 11px; color: var(--muted); line-height: 1.6; }
+  .method-returns { font-size: 10px; color: var(--accent4); margin-top: 6px; }
+
+  /* ===== CODE BLOCKS ===== */
+  .code-wrapper {
+    margin: 20px 0;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .code-dots { display: flex; gap: 6px; }
+  .code-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+  }
+  .dot-r { background: #f25f5c; }
+  .dot-y { background: #f2c07c; }
+  .dot-g { background: #7cf2c8; }
+
+  .code-lang {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .copy-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 4px 10px;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .copy-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  pre {
+    background: var(--code-bg);
+    padding: 20px;
+    overflow-x: auto;
+    font-size: 12.5px;
+    line-height: 1.8;
+  }
+
+  pre::-webkit-scrollbar { height: 4px; }
+  pre::-webkit-scrollbar-track { background: transparent; }
+  pre::-webkit-scrollbar-thumb { background: var(--border); }
+
+  code { font-family: 'JetBrains Mono', monospace; }
+
+  /* Syntax highlighting */
+  .kw { color: #c792ea; }
+  .fn { color: var(--accent3); }
+  .str { color: #c3e88d; }
+  .num { color: var(--accent4); }
+  .cm { color: var(--muted); font-style: italic; }
+  .op { color: var(--accent2); }
+  .obj { color: var(--accent); }
+  .prop { color: #f07178; }
+
+  /* ===== OPERATORS TABLE ===== */
+  .op-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 12px;
+  }
+
+  .op-table th {
+    text-align: left;
+    padding: 10px 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .op-table td {
+    padding: 12px 16px;
+    border: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  .op-table tr:hover td { background: rgba(124,242,200,0.02); }
+
+  .op-name { color: var(--accent4); font-weight: 700; font-size: 13px; }
+  .op-syntax { color: var(--accent2); font-size: 12px; }
+  .op-desc { color: var(--muted); font-size: 11px; line-height: 1.6; }
+
+  /* ===== STATUS CODES ===== */
+  .status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px;
+    margin: 20px 0;
+  }
+
+  .status-card {
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--code-bg);
+    text-align: center;
+  }
+
+  .status-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+
+  .s2xx { color: var(--accent); }
+  .s4xx { color: var(--accent4); }
+  .s5xx { color: var(--accent2); }
+
+  .status-label { font-size: 10px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; }
+
+  /* ===== PROMISE FLOW ===== */
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 24px 0;
+    flex-wrap: wrap;
+  }
+
+  .flow-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .flow-box {
+    padding: 10px 20px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    font-size: 11px;
+    text-align: center;
+    min-width: 100px;
+    border-radius: 3px;
+    letter-spacing: 0.5px;
+  }
+
+  .flow-label { font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+
+  .flow-box.pending { border-color: var(--muted); color: var(--muted); }
+  .flow-box.fulfilled { border-color: var(--accent); color: var(--accent); }
+  .flow-box.rejected { border-color: var(--accent2); color: var(--accent2); }
+
+  .flow-arrow {
+    width: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    font-size: 16px;
+    padding-bottom: 18px;
+  }
+
+  /* ===== HOOK CARDS ===== */
+  .hook-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+    margin: 20px 0;
+  }
+
+  .hook-card {
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .hook-card:hover { border-color: rgba(124,242,200,0.3); }
+
+  .hook-head {
+    padding: 12px 16px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .hook-icon {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .hook-icon.red { background: var(--accent2); }
+  .hook-icon.blue { background: var(--accent3); }
+
+  .hook-name { font-size: 12px; font-weight: 700; color: var(--text); }
+
+  .hook-body { padding: 14px 16px; }
+  .hook-body p { font-size: 11px; color: var(--muted); line-height: 1.7; }
+  .hook-body strong { color: var(--text); }
+
+  /* ===== INLINE CODE ===== */
+  .ic {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+    color: var(--accent3);
+  }
+
+  /* ===== DIVIDER ===== */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 24px 0;
+  }
+
+  /* ===== PROGRESS BAR ===== */
+  .progress-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 2px;
+    background: var(--accent);
+    z-index: 9999;
+    transition: width 0.1s;
+    box-shadow: 0 0 10px var(--accent);
+  }
+
+  /* ===== HAMBURGER ===== */
+  .menu-toggle {
+    display: none;
+    position: fixed;
+    top: 16px; left: 16px;
+    z-index: 200;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 12px;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    border-radius: 3px;
+  }
+
+  /* ===== BACK TO TOP ===== */
+  #back-top {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 3px;
+    transition: all 0.2s;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  #back-top.show { opacity: 1; pointer-events: all; }
+  #back-top:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ===== SEARCH BAR ===== */
+  .search-wrap {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .search-input {
+    width: 100%;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 8px 12px;
+    border-radius: 3px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .search-input::placeholder { color: var(--muted); }
+  .search-input:focus { border-color: var(--accent); }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 900px) {
+    #sidebar {
+      transform: translateX(-100%);
+    }
+    #sidebar.open { transform: translateX(0); }
+    #main { margin-left: 0; }
+    .menu-toggle { display: flex; }
+    .hero { padding: 72px 24px 40px; }
+    .hero::after { display: none; }
+    .hero-title { font-size: 32px; }
+    .section { padding: 40px 24px; }
+  }
+
+  /* Tooltip */
+  [data-tooltip] { position: relative; cursor: help; }
+  [data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    font-size: 10px;
+    white-space: nowrap;
+    border-radius: 3px;
+    color: var(--text);
+    z-index: 100;
+  }
+
+  .note-box {
+    border: 1px solid rgba(124,242,200,0.2);
+    background: rgba(124,242,200,0.04);
+    border-left: 3px solid var(--accent);
+    padding: 14px 16px;
+    margin: 16px 0;
+    font-size: 12px;
+    color: var(--muted);
+    border-radius: 0 4px 4px 0;
+  }
+
+  .note-box strong { color: var(--accent); }
+
+  .warn-box {
+    border: 1px solid rgba(242,95,124,0.2);
+    background: rgba(242,95,124,0.04);
+    border-left: 3px solid var(--accent2);
+    padding: 14px 16px;
+    margin: 16px 0;
+    font-size: 12px;
+    color: var(--muted);
+    border-radius: 0 4px 4px 0;
+  }
+
+  .warn-box strong { color: var(--accent2); }
+
+  .topic-prose { color: var(--muted); font-size: 13px; line-height: 1.8; margin-bottom: 20px; }
+  .topic-prose strong { color: var(--text); }
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progress"></div>
+<div class="ambient ambient-1"></div>
+<div class="ambient ambient-2"></div>
+
+<button class="menu-toggle" id="menuToggle">☰ Menu</button>
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">Full<span>Stack</span>.dev</div>
+    <div class="logo-sub">Notes &amp; Reference</div>
+  </div>
+  <div class="search-wrap">
+    <input class="search-input" type="text" id="searchInput" placeholder="search sections..." autocomplete="off">
+  </div>
+  <div id="navLinks">
+    <div class="nav-section">JavaScript</div>
+    <a href="#js-fundamentals" class="nav-item" data-num="01">Primitives &amp; References</a>
+    <a href="#copying" class="nav-item" data-num="02">Copying Objects &amp; Arrays</a>
+    <a href="#operators" class="nav-item" data-num="03">Special Operators</a>
+    <a href="#array-methods" class="nav-item" data-num="04">Array Methods</a>
+    <a href="#dates" class="nav-item" data-num="05">Dates</a>
+    <a href="#modules" class="nav-item" data-num="06">Modules &amp; Exports</a>
+    <div class="nav-section">Async JS</div>
+    <a href="#async" class="nav-item" data-num="07">Promises &amp; Async/Await</a>
+    <a href="#event-loop" class="nav-item" data-num="07b">JS Runtime &amp; Event Loop</a>
+    <div class="nav-section">Backend</div>
+    <a href="#rest-api" class="nav-item" data-num="08">REST API Concepts</a>
+    <a href="#express" class="nav-item" data-num="09">Express &amp; Middlewares</a>
+    <a href="#mongodb" class="nav-item" data-num="10">MongoDB &amp; Mongoose</a>
+    <a href="#auth" class="nav-item" data-num="11">Auth, JWT &amp; Cookies</a>
+    <div class="nav-section">Frontend</div>
+    <a href="#dom" class="nav-item" data-num="12">DOM Manipulation</a>
+    <a href="#css" class="nav-item" data-num="13">CSS — Fundamentals &amp; Layouts</a>
+    <a href="#tailwind" class="nav-item" data-num="13b">Tailwind + Preflight</a>
+    <div class="nav-section">React</div>
+    <a href="#react-core" class="nav-item" data-num="14">Core Concepts</a>
+    <a href="#react-state" class="nav-item" data-num="15">State &amp; Mutations</a>
+    <a href="#react-forms" class="nav-item" data-num="16">Form Handling</a>
+    <a href="#react-effects" class="nav-item" data-num="17">useEffect</a>
+  </div>
+  <div class="sidebar-footer">
+    Full Stack Web Dev — All Sections
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main id="main">
+
+  <!-- HERO -->
+  <header class="hero section" id="hero" style="opacity:1;transform:none;">
+    <div class="hero-eyebrow">// Full Stack Web Development</div>
+    <h1 class="hero-title">Notes &amp;<br><span>Reference</span></h1>
+    <p class="hero-desc">A comprehensive study guide covering JavaScript fundamentals, async patterns, Node.js backend, MongoDB, security, and React — with code examples and alternatives for every concept.</p>
+    <div class="hero-tags">
+      <span class="tag accent">JavaScript</span>
+      <span class="tag blue">Node.js</span>
+      <span class="tag">MongoDB</span>
+      <span class="tag yellow">React</span>
+      <span class="tag red">Security</span>
+      <span class="tag">CSS</span>
+    </div>
+  </header>
+
+  <!-- ======================== SECTION 1: PRIMITIVES ======================== -->
+  <section class="section" id="js-fundamentals">
+    <div class="section-label">
+      <span class="section-num">01 — JavaScript Fundamentals</span>
+      <div class="section-line"></div>
+    </div>
+    <h2 class="section-title">Primitives vs <span class="hl">Reference</span> Types</h2>
+    <p class="topic-prose">Understanding how JavaScript stores data in memory is fundamental. The difference determines how copying, comparison, and mutation work.</p>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-title">Primitive Types</div>
+        <p><strong>Types:</strong> String, Number, Boolean, null, undefined, Symbol, BigInt</p>
+        <p style="margin-top:8px;"><strong>Storage:</strong> Stack — fast, fixed-size memory</p>
+        <p style="margin-top:8px;"><strong>Behavior:</strong> Immutable. Assignment copies the actual value. Modifying creates a new value, never alters the original.</p>
+      </div>
+      <div class="card blue">
+        <div class="card-title">Reference Types (Non-Primitives)</div>
+        <p><strong>Types:</strong> Objects, Arrays, Functions</p>
+        <p style="margin-top:8px;"><strong>Storage:</strong> Heap (with a reference pointer in the Stack)</p>
+        <p style="margin-top:8px;"><strong>Behavior:</strong> Mutable. <strong>=</strong> only copies the reference pointer. Modifying the "copy" mutates the original!</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================== SECTION 2: COPYING ======================== -->
+  <section class="section" id="copying">
+    <div class="section-label">
+      <span class="section-num">02 — Copying</span>
+      <div class="section-line"></div>
+    </div>
+    <h2 class="section-title">Copying <span class="hl">Objects</span> &amp; Arrays</h2>
+    <p class="topic-prose">Because <span class="ic">let obj2 = obj1</span> only copies the reference, specific methods are needed to actually copy data.</p>
+
+    <div class="card-grid">
+      <div class="card yellow">
+        <div class="card-title">Shallow Copy</div>
+        <p>Copies top-level elements, but <strong>nested objects/arrays still share the same reference</strong>. Changes to nested data will affect both copies.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Deep Copy</div>
+        <p>Creates a <strong>completely independent</strong> copy including all nested objects and arrays. Changes to any level do not affect the original.</p>
+      </div>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">JavaScript — Shallow Copy</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="kw">let</span> <span class="obj">d</span> <span class="op">=</span> { <span class="prop">a</span>: <span class="num">10</span>, <span class="prop">nested</span>: { <span class="prop">b</span>: <span class="num">20</span> } };
+
+<span class="cm">// Alt 1: Spread Operator (Modern &amp; Preferred)</span>
+<span class="kw">let</span> <span class="obj">cd1</span> <span class="op">=</span> { ...<span class="obj">d</span> };
+
+<span class="cm">// Alt 2: Object.assign() (Older method)</span>
+<span class="kw">let</span> <span class="obj">cd2</span> <span class="op">=</span> <span class="fn">Object</span>.<span class="fn">assign</span>({}, <span class="obj">d</span>);</code></pre>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">JavaScript — Deep Copy</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="kw">let</span> <span class="obj">order</span> <span class="op">=</span> { <span class="prop">id</span>: <span class="str">"101"</span>, <span class="prop">address</span>: { <span class="prop">city</span>: <span class="str">"Hyd"</span> } };
+
+<span class="cm">// Alt 1: structuredClone() — Modern Native (PREFERRED)</span>
+<span class="cm">// Handles Dates, Maps, Sets, and nested objects perfectly</span>
+<span class="kw">let</span> <span class="obj">copyOrder</span> <span class="op">=</span> <span class="fn">structuredClone</span>(<span class="obj">order</span>);
+<span class="obj">copyOrder</span>.<span class="prop">address</span>.<span class="prop">city</span> <span class="op">=</span> <span class="str">"uppal"</span>; <span class="cm">// Original stays "Hyd" ✓</span>
+
+<span class="cm">// Alt 2: JSON.parse(JSON.stringify()) — Classic Hack</span>
+<span class="cm">// ⚠ Loses: functions, undefined, Dates become strings</span>
+<span class="kw">let</span> <span class="obj">copyOrder2</span> <span class="op">=</span> <span class="fn">JSON</span>.<span class="fn">parse</span>(<span class="fn">JSON</span>.<span class="fn">stringify</span>(<span class="obj">order</span>));</code></pre>
+    </div>
+
+    <div class="note-box"><strong>// TIP:</strong> Always prefer <span class="ic">structuredClone()</span> for deep copies in modern JS. Use <span class="ic">JSON.parse(JSON.stringify())</span> only for simple plain-data objects in older codebases.</div>
+  </section>
+
+  <!-- ======================== SECTION 3: OPERATORS ======================== -->
+  <section class="section" id="operators">
+    <div class="section-label">
+      <span class="section-num">03 — Operators</span>
+      <div class="section-line"></div>
+    </div>
+    <h2 class="section-title">Special <span class="hl2">JavaScript</span> Operators</h2>
+
+    <table class="op-table">
+      <thead>
+        <tr>
+          <th>Operator</th>
+          <th>Syntax</th>
+          <th>What it does</th>
+          <th>Returns</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="op-name">Optional Chaining</span></td>
+          <td><span class="op-syntax">?.</span></td>
+          <td class="op-desc">Safely accesses deeply nested properties without throwing if a reference is null/undefined</td>
+          <td class="op-desc" style="color:var(--accent)">Value if exists, otherwise <span class="ic">undefined</span></td>
+        </tr>
+        <tr>
+          <td><span class="op-name">Nullish Coalescing</span></td>
+          <td><span class="op-syntax">??</span></td>
+          <td class="op-desc">Checks if left side is exactly <span class="ic">null</span> or <span class="ic">undefined</span>, provides fallback if so</td>
+          <td class="op-desc" style="color:var(--accent)">Left value if it exists, otherwise right-side fallback</td>
+        </tr>
+        <tr>
+          <td><span class="op-name">Spread</span></td>
+          <td><span class="op-syntax">...</span></td>
+          <td class="op-desc">Expands an iterable (array or object) into its individual elements</td>
+          <td class="op-desc" style="color:var(--accent)">Unpacked elements — used for shallow copies and merging</td>
+        </tr>
+        <tr>
+          <td><span class="op-name">Destructuring</span></td>
+          <td><span class="op-syntax">{a,b}=obj</span></td>
+          <td class="op-desc">Extracts values from arrays or properties from objects into distinct variables</td>
+          <td class="op-desc" style="color:var(--accent)">Extracted values assigned to your variables</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">JavaScript — Operator Examples</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="cm">// Optional Chaining — won't crash if city is undefined</span>
+console.<span class="fn">log</span>(<span class="obj">student</span>.<span class="prop">city</span>?.<span class="prop">length</span>);
+
+<span class="cm">// Nullish Coalescing — fallback if city is null/undefined</span>
+console.<span class="fn">log</span>(<span class="obj">student</span>.<span class="prop">city</span>?.<span class="prop">length</span> <span class="op">??</span> <span class="str">"Not exist"</span>);
+
+<span class="cm">// Spread — add new course to array immutably</span>
+<span class="kw">let</span> <span class="fn">addCourse</span> <span class="op">=</span> (<span class="prop">newCourse</span>) <span class="op">=></span> [...<span class="obj">courses</span>, <span class="prop">newCourse</span>];
+
+<span class="cm">// Destructuring — extract from req.params</span>
+<span class="kw">let</span> { <span class="prop">uid</span>, <span class="prop">pid</span> } <span class="op">=</span> <span class="obj">req</span>.<span class="prop">params</span>;</code></pre>
+    </div>
+  </section>
+
+  <!-- ======================== SECTION 4: ARRAY METHODS ======================== -->
+  <section class="section" id="array-methods">
+    <div class="section-label">
+      <span class="section-num">04 — Arrays</span>
+      <div class="section-line"></div>
+    </div>
+    <h2 class="section-title">Array <span class="hl3">Methods</span></h2>
+    <p class="topic-prose">JavaScript provides powerful higher-order functions for manipulating arrays and arrays of objects. These methods are the backbone of modern JS development.</p>
+
+    <div class="method-grid">
+      <div class="method-card">
+        <div class="method-name">.filter()</div>
+        <div class="method-desc">Returns a NEW array containing only items that satisfy the condition. Does not modify the original.</div>
+        <div class="method-returns">→ Returns: New Array</div>
+      </div>
+      <div class="method-card">
+        <div class="method-name">.map()</div>
+        <div class="method-desc">Returns a NEW array populated with the transformed results of a callback applied to each element.</div>
+        <div class="method-returns">→ Returns: New Array (same length)</div>
+      </div>
+      <div class="method-card">
+        <div class="method-name">.some()</div>
+        <div class="method-desc">Checks if at least one element in the array satisfies the condition. Short-circuits on first match.</div>
+        <div class="method-returns">→ Returns: Boolean</div>
+      </div>
+      <div class="method-card">
+        <div class="method-name">.every()</div>
+        <div class="method-desc">Checks if ALL elements in the array satisfy the condition. Short-circuits on first failure.</div>
+        <div class="method-returns">→ Returns: Boolean</div>
+      </div>
+      <div class="method-card">
+        <div class="method-name">.find()</div>
+        <div class="method-desc">Returns the first element that matches the condition. Stops iterating after the first match is found.</div>
+        <div class="method-returns">→ Returns: Element | undefined</div>
+      </div>
+      <div class="method-card">
+        <div class="method-name">.reduce()</div>
+        <div class="method-desc">Accumulates array values into a single output. The accumulator carries value across iterations.</div>
+        <div class="method-returns">→ Returns: Single Accumulated Value</div>
+      </div>
+      <div class="method-card">
+        <div class="method-name">.sort()</div>
+        <div class="method-desc">Sorts elements IN PLACE. Use spread (<span style="color:var(--accent3)">...</span>) to create a copy first to avoid mutating the original array.</div>
+        <div class="method-returns">→ Mutates original — copy first!</div>
+      </div>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">JavaScript — Array Methods</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="kw">const</span> <span class="obj">users</span> <span class="op">=</span> [
+  { <span class="prop">id</span>: <span class="num">1</span>, <span class="prop">name</span>: <span class="str">"Ravi"</span>,  <span class="prop">role</span>: <span class="str">"student"</span>, <span class="prop">active</span>: <span class="kw">true</span> },
+  { <span class="prop">id</span>: <span class="num">2</span>, <span class="prop">name</span>: <span class="str">"Anil"</span>,  <span class="prop">role</span>: <span class="str">"admin"</span>,   <span class="prop">active</span>: <span class="kw">true</span> },
+];
+<span class="kw">const</span> <span class="obj">courses</span> <span class="op">=</span> [{ <span class="prop">id</span>: <span class="num">101</span>, <span class="prop">title</span>: <span class="str">"JS"</span>, <span class="prop">price</span>: <span class="num">999</span> }];
+
+<span class="cm">// filter: Returns new array of items matching condition</span>
+<span class="kw">let</span> <span class="obj">activeUsers</span> <span class="op">=</span> <span class="obj">users</span>.<span class="fn">filter</span>(<span class="prop">user</span> <span class="op">=></span> <span class="prop">user</span>.<span class="prop">active</span>);
+
+<span class="cm">// map: Chain after filter to transform results</span>
+<span class="kw">let</span> <span class="obj">activeUserNames</span> <span class="op">=</span> <span class="obj">users</span>
+  .<span class="fn">filter</span>(<span class="prop">user</span> <span class="op">=></span> <span class="prop">user</span>.<span class="prop">active</span>)
+  .<span class="fn">map</span>(<span class="prop">user</span> <span class="op">=></span> <span class="prop">user</span>.<span class="prop">name</span>); <span class="cm">// ["Ravi", "Anil"]</span>
+
+<span class="cm">// some: true if AT LEAST ONE matches</span>
+<span class="kw">const</span> <span class="obj">adminExists</span> <span class="op">=</span> <span class="obj">users</span>.<span class="fn">some</span>(<span class="prop">user</span> <span class="op">=></span> <span class="prop">user</span>.<span class="prop">role</span> <span class="op">===</span> <span class="str">"admin"</span>);
+
+<span class="cm">// every: true only if ALL match</span>
+<span class="kw">let</span> <span class="obj">allPaid</span> <span class="op">=</span> <span class="obj">courses</span>.<span class="fn">every</span>(<span class="prop">c</span> <span class="op">=></span> <span class="prop">c</span>.<span class="prop">price</span> <span class="op">></span> <span class="num">0</span>);
+
+<span class="cm">// find: Returns first match</span>
+<span class="kw">let</span> <span class="fn">findUserById</span> <span class="op">=</span> (<span class="prop">id</span>) <span class="op">=></span> <span class="obj">users</span>.<span class="fn">find</span>(<span class="prop">u</span> <span class="op">=></span> <span class="prop">u</span>.<span class="prop">id</span> <span class="op">===</span> <span class="prop">id</span>);
+
+<span class="cm">// reduce: Accumulate to single value</span>
+<span class="kw">let</span> <span class="obj">total</span> <span class="op">=</span> <span class="obj">courses</span>.<span class="fn">reduce</span>((<span class="prop">sum</span>, <span class="prop">c</span>) <span class="op">=></span> <span class="prop">sum</span> <span class="op">+</span> <span class="prop">c</span>.<span class="prop">price</span>, <span class="num">0</span>);
+
+<span class="cm">// sort: Spread first to avoid mutating original</span>
+<span class="kw">let</span> <span class="obj">sortPrices</span> <span class="op">=</span> [...<span class="obj">courses</span>].<span class="fn">sort</span>((<span class="prop">a</span>, <span class="prop">b</span>) <span class="op">=></span> <span class="prop">b</span>.<span class="prop">price</span> <span class="op">-</span> <span class="prop">a</span>.<span class="prop">price</span>);</code></pre>
+    </div>
+  </section>
+
+  <!-- ======================== SECTION 5: DATES ======================== -->
+  <section class="section" id="dates">
+    <div class="section-label">
+      <span class="section-num">05 — Dates</span>
+      <div class="section-line"></div>
+    </div>
+    <h2 class="section-title">Dates in <span class="hl">JavaScript</span></h2>
+    <p class="topic-prose">Dates internally store time as a <strong>UTC timestamp in milliseconds since Jan 1, 1970</strong> (Unix Epoch). The Date constructor accepts multiple formats.</p>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">JavaScript — Dates</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="kw">let</span> <span class="obj">date</span> <span class="op">=</span> <span class="kw">new</span> <span class="fn">Date</span>();              <span class="cm">// Current date &amp; time</span>
+<span class="kw">let</span> <span class="obj">d2</span>   <span class="op">=</span> <span class="kw">new</span> <span class="fn">Date</span>(<span class="str">'2022-01-12'</span>);   <span class="cm">// ISO string format</span>
+<span class="kw">let</span> <span class="obj">d3</span>   <span class="op">=</span> <span class="kw">new</span> <span class="fn">Date</span>(<span class="num">2022</span>, <span class="num">0</span>, <span class="num">12</span>);    <span class="cm">// Year, Month (0=Jan!), Day</span>
+
+console.<span class="fn">log</span>(<span class="obj">date</span>.<span class="fn">getFullYear</span>()); <span class="cm">// 2024</span>
+console.<span class="fn">log</span>(<span class="obj">date</span>.<span class="fn">getMonth</span>());    <span class="cm">// 0-11 (⚠ 0 = January!)</span>
+console.<span class="fn">log</span>(<span class="obj">date</span>.<span class="fn">getDate</span>());     <span class="cm">// 1-31 (day of month)</span>
+console.<span class="fn">log</span>(<span class="obj">date</span>.<span class="fn">getDay</span>());      <span class="cm">// 0-6 (0 = Sunday)</span>
+console.<span class="fn">log</span>(<span class="obj">date</span>.<span class="fn">getTime</span>());     <span class="cm">// Milliseconds since epoch</span></code></pre>
+    </div>
+    <div class="warn-box"><strong>⚠ Gotcha:</strong> <span class="ic">getMonth()</span> returns 0–11, not 1–12. January = 0. Always add 1 when displaying month to users.</div>
+  </section>
+
+  <!-- ======================== SECTION 6: MODULES ======================== -->
+  <section class="section" id="modules">
+    <div class="section-label">
+      <span class="section-num">06 — Modules</span>
+      <div class="section-line"></div>
+    </div>
+    <h2 class="section-title">Modules <span class="hl4">&amp; Exports</span></h2>
+
+    <div class="card-grid">
+      <div class="card yellow">
+        <div class="card-title">Default Export</div>
+        <p>One per module. The importer can <strong>name it whatever they want</strong>. Best for a module's primary export.</p>
+        <p style="margin-top:8px;"><strong>Export:</strong> <span class="ic">export default a;</span></p>
+        <p style="margin-top:4px;"><strong>Import:</strong> <span class="ic">import myVar from './file.js'</span></p>
+      </div>
+      <div class="card blue">
+        <div class="card-title">Named Export</div>
+        <p>Multiple per module. The importer <strong>MUST use the exact name</strong> in curly braces. Best for utility functions.</p>
+        <p style="margin-top:8px;"><strong>Export:</strong> <span class="ic">export &#123; b, marks &#125;;</span></p>
+        <p style="margin-top:4px;"><strong>Import:</strong> <span class="ic">import &#123; b, marks &#125; from './file.js'</span></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================== SECTION 7: ASYNC ======================== -->
+  <section class="section" id="async">
+    <div class="section-label">
+      <span class="section-num">07 — Async JavaScript</span>
+      <div class="section-line"></div>
+    </div>
+    <h2 class="section-title">Promises <span class="hl">&amp; Async</span>/Await</h2>
+    <p class="topic-prose">JavaScript is <strong>single-threaded</strong> — one task at a time. The runtime (Browser or Node.js) handles async tasks via Web APIs + Event Loop, pushing callbacks back to the engine when ready.</p>
+
+    <div class="flow">
+      <div class="flow-step">
+        <div class="flow-box pending">PENDING</div>
+        <div class="flow-label">Initial State</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-box fulfilled">FULFILLED</div>
+        <div class="flow-label">resolve() called</div>
+      </div>
+      <div style="padding-bottom:18px;color:var(--muted);padding-left:8px;padding-right:8px;"> | </div>
+      <div class="flow-step">
+        <div class="flow-box rejected">REJECTED</div>
+        <div class="flow-label">reject() called</div>
+      </div>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">JavaScript — Creating a Promise</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="kw">let</span> <span class="obj">futureAvailability</span> <span class="op">=</span> <span class="kw">true</span>;
+
+<span class="kw">let</span> <span class="obj">promiseObj</span> <span class="op">=</span> <span class="kw">new</span> <span class="fn">Promise</span>((<span class="prop">fulfill</span>, <span class="prop">reject</span>) <span class="op">=></span> {
+  <span class="fn">setTimeout</span>(() <span class="op">=></span> {
+    <span class="obj">futureAvailability</span> <span class="op">===</span> <span class="kw">true</span>
+      <span class="op">?</span> <span class="fn">fulfill</span>(<span class="str">"hello kiran"</span>)
+      <span class="op">:</span> <span class="fn">reject</span>(<span class="str">"Sorry call later"</span>);
+  }, <span class="num">5000</span>);
+});</code></pre>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">JavaScript — Alt 1: .then() / .catch()</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="cm">// Classic chaining — still valid, can get "callback-hell"-y</span>
+<span class="obj">promiseObj</span>
+  .<span class="fn">then</span>((<span class="prop">msg</span>) <span class="op">=></span> console.<span class="fn">log</span>(<span class="str">"message: "</span>, <span class="prop">msg</span>))
+  .<span class="fn">catch</span>((<span class="prop">msg</span>) <span class="op">=></span> console.<span class="fn">log</span>(<span class="str">"error: "</span>, <span class="prop">msg</span>));</code></pre>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">JavaScript — Alt 2: async / await (Modern)</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="cm">// Reads like synchronous code — much cleaner!</span>
+<span class="kw">async function</span> <span class="fn">consumePromise</span>() {
+  <span class="kw">try</span> {
+    <span class="kw">let</span> <span class="obj">res</span> <span class="op">=</span> <span class="kw">await</span> <span class="obj">promiseObj</span>; <span class="cm">// Pauses until resolved</span>
+    console.<span class="fn">log</span>(<span class="obj">res</span>);
+  } <span class="kw">catch</span> (<span class="prop">err</span>) {
+    console.<span class="fn">log</span>(<span class="prop">err</span>); <span class="cm">// Handles rejection</span>
+  }
+}
+<span class="cm">// All async functions implicitly return a Promise</span></code></pre>
+    </div>
+  </section>
+
+  <!-- ======================== SECTION 7b: EVENT LOOP ======================== -->
+  <section class="section" id="event-loop">
+    <div class="section-label">
+      <span class="section-num">07b — Runtime</span>
+      <div class="section-line"></div>
+    </div>
+    <h2 class="section-title">JS Engine <span class="hl4">&amp; Event Loop</span></h2>
+    <p class="topic-prose">JavaScript is <strong>single-threaded</strong> — but async operations don't block because the <strong>runtime</strong> (Browser or Node.js) offloads them to native APIs, then uses the Event Loop to bring results back when the JS engine is free.</p>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-title">Call Stack</div>
+        <p>Where JS executes code. <strong>LIFO</strong> (Last In, First Out). Functions are pushed when called, popped when they return. If a function blocks here, everything freezes.</p>
+      </div>
+      <div class="card blue">
+        <div class="card-title">Web APIs / Node APIs</div>
+        <p>Browser/Node handles async tasks <strong>outside</strong> the JS engine: <span class="ic">setTimeout</span>, HTTP requests, DOM events, file I/O. JS hands off the task and continues executing.</p>
+      </div>
+      <div class="card yellow">
+        <div class="card-title">Callback Queue (Task Queue)</div>
+        <p>When a Web API finishes (e.g. timer fires), the callback is placed in this queue. It waits here until the Call Stack is empty.</p>
+      </div>
+      <div class="card red">
+        <div class="card-title">Event Loop</div>
+        <p>Continuously checks: <strong>"Is the Call Stack empty?"</strong> If yes, it takes the next callback from the queue and pushes it onto the stack. This is how async callbacks run.</p>
+      </div>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">JavaScript — Event Loop Order of Execution</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code>console.<span class="fn">log</span>(<span class="str">"1 — synchronous, runs immediately"</span>);
+
+<span class="fn">setTimeout</span>(() <span class="op">=></span> {
+  console.<span class="fn">log</span>(<span class="str">"3 — async, runs AFTER call stack clears"</span>);
+}, <span class="num">0</span>); <span class="cm">// Even 0ms delay goes to callback queue!</span>
+
+console.<span class="fn">log</span>(<span class="str">"2 — synchronous, runs before setTimeout callback"</span>);
+
+<span class="cm">// Output order: 1 → 2 → 3</span>
+<span class="cm">// The Event Loop only pushes the setTimeout callback</span>
+<span class="cm">// after lines 1 and 2 have finished and the stack is empty.</span></code></pre>
+    </div>
+
+    <div class="note-box"><strong>// Browser Runtime =</strong> JS Engine + Web APIs + Event Loop<br><strong>// Node.js Runtime =</strong> JS Engine + Node APIs (libuv) + Event Loop</div>
+  </section>
+
+  <!-- ======================== SECTION 8: REST API ======================== -->
+  <section class="section" id="rest-api">
+    <div class="section-label">
+      <span class="section-num">08 — Backend</span>
+      <div class="section-line"></div>
+    </div>
+    <h2 class="section-title">REST API <span class="hl2">Concepts</span></h2>
+
+    <div class="note-box"><strong>// Endpoints Rule:</strong> Use nouns, plurals, lowercase, and hyphens → <span class="ic">GET /user-profiles</span></div>
+
+    <div class="status-grid">
+      <div class="status-card">
+        <div class="status-num s2xx">200</div>
+        <div class="status-label">OK</div>
+      </div>
+      <div class="status-card">
+        <div class="status-num s2xx">201</div>
+        <div class="status-label">Created</div>
+      </div>
+      <div class="status-card">
+        <div class="status-num s4xx">400</div>
+        <div class="status-label">Bad Request</div>
+      </div>
+      <div class="status-card">
+        <div class="status-num s4xx">401</div>
+        <div class="status-label">Unauthorized</div>
+      </div>
+      <div class="status-card">
+        <div class="status-num s4xx">404</div>
+        <div class="status-label">Not Found</div>
+      </div>
+      <div class="status-card">
+        <div class="status-num s5xx">500</div>
+        <div class="status-label">Server Error</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================== SECTION 9: EXPRESS ======================== -->
+  <section class="section" id="express">
+    <div class="section-label">
+      <span class="section-num">09 — Express</span>
+      <div class="section-line"></div>
+    </div>
+    <h2 class="section-title">Express <span class="hl3">&amp; Middlewares</span></h2>
+    <p class="topic-prose">Middlewares run <strong>between receiving a request and sending a response</strong>. They form a pipeline — each middleware calls <span class="ic">next()</span> to pass control forward.</p>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">Shell — Installation</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="cm"># Initialize a Node project first (creates package.json)</span>
+npm init -y
+
+<span class="cm"># Install Express + cookie-parser</span>
+npm install express cookie-parser
+
+<span class="cm"># Add "type": "module" to package.json to use ES module imports</span>
+<span class="cm"># (needed for: import exp from 'express')</span></code></pre>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">JavaScript — Express Setup</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="kw">import</span> exp <span class="kw">from</span> <span class="str">'express'</span>;
+<span class="kw">import</span> cookieParser <span class="kw">from</span> <span class="str">'cookie-parser'</span>;
+
+<span class="kw">const</span> <span class="obj">app</span> <span class="op">=</span> <span class="fn">exp</span>();
+
+<span class="cm">// Built-in Middlewares</span>
+<span class="obj">app</span>.<span class="fn">use</span>(<span class="obj">exp</span>.<span class="fn">json</span>());       <span class="cm">// Parses JSON body → req.body</span>
+<span class="obj">app</span>.<span class="fn">use</span>(<span class="fn">cookieParser</span>());  <span class="cm">// Parses cookies → req.cookies</span>
+
+<span class="cm">// Custom Router</span>
+<span class="kw">import</span> { <span class="obj">userApp</span> } <span class="kw">from</span> <span class="str">"../apis/userApi.js"</span>;
+<span class="obj">app</span>.<span class="fn">use</span>(<span class="str">'/apis/user-api'</span>, <span class="obj">userApp</span>);
+
+<span class="cm">// Global Error Handler — MUST be last, needs 4 arguments</span>
+<span class="kw">function</span> <span class="fn">errorHandler</span>(<span class="prop">err</span>, <span class="prop">req</span>, <span class="prop">res</span>, <span class="prop">next</span>) {
+  <span class="prop">res</span>.<span class="fn">json</span>({ <span class="prop">message</span>: <span class="str">"error occured!"</span>, <span class="prop">reason</span>: <span class="prop">err</span>.<span class="prop">message</span> });
+}
+<span class="obj">app</span>.<span class="fn">use</span>(<span class="fn">errorHandler</span>); <span class="cm">// ⚠ Keep at the very end</span>
+
+<span class="obj">app</span>.<span class="fn">listen</span>(<span class="num">4000</span>, () <span class="op">=></span> console.<span class="fn">log</span>(<span class="str">"listening to port 4000"</span>));</code></pre>
+    </div>
+  </section>
+
+  <!-- ======================== SECTION 10: MONGODB ======================== -->
+  <section class="section" id="mongodb">
+    <div class="section-label">
+      <span class="section-num">10 — Database</span>
+      <div class="section-line"></div>
+    </div>
+    <h2 class="section-title">MongoDB <span class="hl4">&amp; Mongoose</span></h2>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">Shell — Installation</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="cm"># Install Mongoose (MongoDB ODM for Node.js)</span>
+npm install mongoose
+
+<span class="cm"># Connect to MongoDB in your server entry file</span>
+<span class="cm"># Replace the URI with your MongoDB Atlas connection string</span>
+mongoose.<span class="fn">connect</span>(<span class="str">"mongodb+srv://&lt;user&gt;:&lt;pass&gt;@cluster.mongodb.net/dbname"</span>)
+  .<span class="fn">then</span>(() <span class="op">=></span> console.<span class="fn">log</span>(<span class="str">"DB connected"</span>))
+  .<span class="fn">catch</span>((<span class="prop">err</span>) <span class="op">=></span> console.<span class="fn">log</span>(<span class="prop">err</span>));</code></pre>
+    </div>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-title">Comparison Operators</div>
+        <p><span class="ic">$eq</span> equal &nbsp;<span class="ic">$neq</span> not equal &nbsp;<span class="ic">$gt</span> greater than</p>
+        <p style="margin-top:6px;"><span class="ic">$gte</span> ≥ &nbsp;<span class="ic">$lt</span> less than &nbsp;<span class="ic">$lte</span> ≤</p>
+        <p style="margin-top:6px;"><span class="ic">$in</span> value in array &nbsp;<span class="ic">$nin</span> value NOT in array</p>
+      </div>
+      <div class="card blue">
+        <div class="card-title">Array Operators</div>
+        <p><strong>Query:</strong> <span class="ic">$all</span> — doc array must contain ALL listed values (order doesn't matter)</p>
+        <p style="margin-top:8px;"><strong>Update:</strong></p>
+        <p><span class="ic">$push</span> — add one item to array</p>
+        <p><span class="ic">$each</span> — used with <span class="ic">$push</span> to add multiple items at once</p>
+        <p><span class="ic">$pull</span> — remove all items matching a condition</p>
+        <p><span class="ic">$pop</span> — remove first (<span class="ic">-1</span>) or last (<span class="ic">1</span>) item</p>
+        <p><span class="ic">$addToSet</span> — push only if value doesn't already exist (no duplicates)</p>
+      </div>
+      <div class="card red">
+        <div class="card-title">General Update Operators</div>
+        <p><span class="ic">$set</span> — set a field to a value (creates it if it doesn't exist)</p>
+        <p style="margin-top:6px;"><span class="ic">$unset</span> — completely remove a field from the document</p>
+        <p style="margin-top:6px;"><span class="ic">$inc</span> — increment (or decrement with negative value) a numeric field</p>
+      </div>
+    </div>
+
+    <div class="card-grid" style="margin-top:20px;">
+      <div class="card yellow">
+        <div class="card-title">strict: "throw"</div>
+        <p>If you try to save a field that isn't defined in the schema, Mongoose will <strong>throw an error</strong> instead of silently ignoring it. Catches typos and accidental extra fields during development.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">timestamps: true</div>
+        <p>Automatically adds <span class="ic">createdAt</span> and <span class="ic">updatedAt</span> fields to every document. Mongoose manages these for you — no need to set them manually.</p>
+      </div>
+      <div class="card blue">
+        <div class="card-title">runValidators: true</div>
+        <p>By default, Mongoose validators (like <span class="ic">minLength</span>, <span class="ic">required</span>) only run on <span class="ic">.save()</span>. You must pass <span class="ic">runValidators: true</span> in update options to enforce them on <span class="ic">findByIdAndUpdate</span> too.</p>
+      </div>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">JavaScript — Mongoose Schema &amp; Model</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="kw">import</span> { <span class="fn">Schema</span>, <span class="fn">model</span> } <span class="kw">from</span> <span class="str">'mongoose'</span>;
+
+<span class="kw">const</span> <span class="obj">productSchema</span> <span class="op">=</span> <span class="kw">new</span> <span class="fn">Schema</span>({
+  <span class="prop">productName</span>: {
+    <span class="prop">type</span>: <span class="fn">String</span>,
+    <span class="prop">required</span>: [<span class="kw">true</span>, <span class="str">"product name required"</span>],
+    <span class="prop">minLength</span>: [<span class="num">5</span>, <span class="str">'min length is 5'</span>]
+  },
+  <span class="prop">price</span>: {
+    <span class="prop">type</span>: <span class="fn">Number</span>,
+    <span class="prop">min</span>: [<span class="num">10</span>, <span class="str">'min price 10'</span>]
+  }
+}, {
+  <span class="prop">strict</span>: <span class="str">"throw"</span>,   <span class="cm">// Error if undefined fields are saved</span>
+  <span class="prop">timestamps</span>: <span class="kw">true</span>,  <span class="cm">// Auto-adds createdAt &amp; updatedAt</span>
+  <span class="prop">versionKey</span>: <span class="kw">false</span>  <span class="cm">// Removes __v field</span>
+});
+
+<span class="kw">export const</span> <span class="obj">ProductModel</span> <span class="op">=</span> <span class="fn">model</span>(<span class="str">"product"</span>, <span class="obj">productSchema</span>);</code></pre>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">JavaScript — Database Operations</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="cm">// Update user cart — push product and populate details</span>
+<span class="kw">let</span> <span class="obj">modifiedUser</span> <span class="op">=</span> <span class="kw">await</span> <span class="obj">UserModel</span>.<span class="fn">findByIdAndUpdate</span>(
+  <span class="prop">uid</span>,
+  { <span class="prop">$push</span>: { <span class="prop">cart</span>: { <span class="prop">product</span>: <span class="prop">pid</span>, <span class="prop">quantity</span>: <span class="num">1</span> } } },
+  { <span class="prop">new</span>: <span class="kw">true</span>, <span class="prop">runValidators</span>: <span class="kw">true</span> } <span class="cm">// runValidators: false by default!</span>
+).<span class="fn">populate</span>(<span class="str">"cart.product"</span>, <span class="str">"productName price"</span>);
+<span class="cm">//          ↑ field to populate  ↑ fields to select</span></code></pre>
+    </div>
+
+    <div class="note-box"><strong>// .populate()</strong> replaces the stored ObjectId reference with the actual document data from the referenced collection. The second argument is a space-separated list of fields to include (field projection). For example <span class="ic">"productName price"</span> returns only those two fields from the Product document, not the entire object.</div>
+  </section>
+
+  <!-- ======================== SECTION 11: AUTH ======================== -->
+  <section class="section" id="auth">
+    <div class="section-label">
+      <span class="section-num">11 — Security</span>
+      <div class="section-line"></div>
+    </div>
+    <h2 class="section-title">Auth, JWT <span class="hl2">&amp; Cookies</span></h2>
+    <p class="topic-prose">Store passwords as <strong>bcrypt hashes</strong>, never plain text. Generate a JWT on successful login and send it as an <strong>httpOnly cookie</strong> for XSS protection.</p>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">Shell — Installation</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="cm"># bcryptjs — password hashing (pure JS, no native deps)</span>
+npm install bcryptjs
+
+<span class="cm"># jsonwebtoken — sign &amp; verify JWTs</span>
+npm install jsonwebtoken
+
+<span class="cm"># dotenv — load .env variables (for JWT_SECRET)</span>
+npm install dotenv
+
+<span class="cm"># In your entry file, load env vars before anything else:</span>
+<span class="kw">import</span> <span class="str">'dotenv/config'</span>;</code></pre>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">Shell — .env file (never commit this!)</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="cm"># .env — store secrets here, add .env to .gitignore</span>
+JWT_SECRET=your_super_secret_key_here
+PORT=4000
+MONGO_URI=mongodb+srv://user:pass@cluster.mongodb.net/db</code></pre>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">JavaScript — Registration &amp; Login</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="kw">import</span> bcrypt <span class="kw">from</span> <span class="str">'bcryptjs'</span>;
+<span class="kw">import</span> jwt <span class="kw">from</span> <span class="str">'jsonwebtoken'</span>;
+
+<span class="cm">// 1. REGISTRATION — Hash password before saving</span>
+<span class="cm">// Cost factor 12 = ~250ms to hash (good balance of security/speed)</span>
+<span class="kw">let</span> <span class="obj">hashedPassword</span> <span class="op">=</span> <span class="kw">await</span> bcrypt.<span class="fn">hash</span>(<span class="obj">req</span>.<span class="prop">body</span>.<span class="prop">password</span>, <span class="num">12</span>);
+
+<span class="cm">// 2. LOGIN — Compare passwords safely</span>
+<span class="kw">let</span> <span class="obj">passMatch</span> <span class="op">=</span> <span class="kw">await</span> bcrypt.<span class="fn">compare</span>(<span class="prop">password</span>, <span class="prop">userDB</span>.<span class="prop">password</span>);
+<span class="kw">if</span> (!<span class="obj">passMatch</span>) <span class="kw">return</span> <span class="obj">res</span>.<span class="fn">status</span>(<span class="num">401</span>).<span class="fn">json</span>({ <span class="prop">message</span>: <span class="str">"Invalid"</span> });
+
+<span class="cm">// 3. SIGN JWT — Payload + secret + options</span>
+<span class="kw">let</span> <span class="obj">signedToken</span> <span class="op">=</span> jwt.<span class="fn">sign</span>(
+  { <span class="prop">username</span>: <span class="prop">username</span> },
+  <span class="obj">process</span>.<span class="prop">env</span>.<span class="prop">JWT_SECRET</span>,
+  { <span class="prop">expiresIn</span>: <span class="str">'1h'</span> }
+);
+
+<span class="cm">// 4. SET COOKIE — httpOnly prevents XSS access</span>
+<span class="obj">res</span>.<span class="fn">cookie</span>(<span class="str">'token'</span>, <span class="obj">signedToken</span>, {
+  <span class="prop">httpOnly</span>: <span class="kw">true</span>,   <span class="cm">// JS can't read this (XSS safe)</span>
+  <span class="prop">secure</span>:   <span class="kw">false</span>,  <span class="cm">// Set true in HTTPS production</span>
+  <span class="prop">sameSite</span>: <span class="str">"lax"</span>   <span class="cm">// Relaxes cross-origin restrictions</span>
+});
+<span class="obj">res</span>.<span class="fn">status</span>(<span class="num">200</span>).<span class="fn">json</span>({ <span class="prop">message</span>: <span class="str">"login successful"</span> });</code></pre>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">JavaScript — Token Verification Middleware</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="kw">export function</span> <span class="fn">verifyToken</span>(<span class="prop">req</span>, <span class="prop">res</span>, <span class="prop">next</span>) {
+  <span class="kw">let</span> <span class="obj">signedToken</span> <span class="op">=</span> <span class="prop">req</span>.<span class="prop">cookies</span>.<span class="prop">token</span>;
+
+  <span class="kw">if</span> (!<span class="obj">signedToken</span>) {
+    <span class="kw">return</span> <span class="prop">res</span>.<span class="fn">status</span>(<span class="num">401</span>).<span class="fn">json</span>({ <span class="prop">message</span>: <span class="str">"please login first"</span> });
+  }
+
+  <span class="kw">let</span> <span class="obj">decodedToken</span> <span class="op">=</span> jwt.<span class="fn">verify</span>(<span class="obj">signedToken</span>, <span class="str">"secret"</span>);
+  <span class="fn">next</span>(); <span class="cm">// Pass control to the actual route handler</span>
+}
+
+<span class="cm">// Usage: Apply middleware to protected routes</span>
+<span class="obj">userApp</span>.<span class="fn">get</span>(<span class="str">'/test'</span>, <span class="fn">verifyToken</span>, (<span class="prop">req</span>, <span class="prop">res</span>) <span class="op">=></span> { ... });</code></pre>
+    </div>
+  </section>
+
+  <!-- ======================== SECTION 12: DOM ======================== -->
+  <section class="section" id="dom">
+    <div class="section-label">
+      <span class="section-num">12 — DOM</span>
+      <div class="section-line"></div>
+    </div>
+    <h2 class="section-title">DOM <span class="hl3">Manipulation</span></h2>
+    <p class="topic-prose">Vanilla JS DOM manipulation is <strong>imperative</strong> — you tell the browser exactly what to do, step by step. React is declarative — you describe what the UI should look like and React handles the DOM.</p>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">JavaScript — DOM Events</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="kw">let</span> <span class="obj">submitbtn</span> <span class="op">=</span> document.<span class="fn">querySelector</span>(<span class="str">".sb"</span>);
+<span class="kw">let</span> <span class="obj">parent</span>    <span class="op">=</span> document.<span class="fn">querySelector</span>(<span class="str">".parent"</span>);
+
+<span class="obj">submitbtn</span>.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, (<span class="prop">e</span>) <span class="op">=></span> {
+  <span class="prop">e</span>.<span class="fn">preventDefault</span>(); <span class="cm">// Stop default form submission</span>
+
+  <span class="kw">let</span> <span class="obj">newChild</span> <span class="op">=</span> document.<span class="fn">createElement</span>(<span class="str">'p'</span>);
+  <span class="obj">newChild</span>.<span class="prop">textContent</span> <span class="op">=</span> <span class="str">"Hello World!"</span>;
+  <span class="obj">newChild</span>.<span class="prop">style</span>.<span class="prop">color</span>  <span class="op">=</span> <span class="str">"red"</span>;
+  <span class="obj">parent</span>.<span class="fn">appendChild</span>(<span class="obj">newChild</span>);
+});</code></pre>
+    </div>
+  </section>
+
+  <!-- ======================== SECTION 13: CSS ======================== -->
+  <section class="section" id="css">
+    <div class="section-label">
+      <span class="section-num">13 — CSS</span>
+      <div class="section-line"></div>
+    </div>
+    <h2 class="section-title">CSS <span class="hl4">Fundamentals</span> &amp; Layouts</h2>
+
+    <!-- DEFAULT BROWSER CSS -->
+    <h3 style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:12px;letter-spacing:-0.5px;">Default <span style="color:var(--accent4)">Browser CSS</span></h3>
+    <p class="topic-prose">Before you write a single line of CSS, the browser already applies its own built-in stylesheet called the <strong>User-Agent Stylesheet</strong>. This is why an unstyled <span class="ic">&lt;h1&gt;</span> is big and bold, <span class="ic">&lt;a&gt;</span> tags are blue and underlined, and <span class="ic">&lt;ul&gt;</span> has bullets — you didn't add any of that, the browser did.</p>
+
+    <div class="card-grid">
+      <div class="card yellow">
+        <div class="card-title">User-Agent Stylesheet</div>
+        <p>Every browser ships with default styles. Chrome, Firefox, and Safari all have slightly different defaults — which is why sites can look inconsistent across browsers without a reset.</p>
+      </div>
+      <div class="card red">
+        <div class="card-title">CSS Reset</div>
+        <p>A CSS reset removes all browser defaults so you start from zero. The most common is <span class="ic">* &#123; margin:0; padding:0; box-sizing:border-box; &#125;</span>. Tailwind's Preflight does this automatically.</p>
+      </div>
+      <div class="card blue">
+        <div class="card-title">Cascade &amp; Specificity</div>
+        <p>When multiple rules target the same element, the browser picks the winner by <strong>specificity</strong>: inline style &gt; ID &gt; class &gt; tag. Equal specificity = last rule wins (the "cascade").</p>
+      </div>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">CSS — What the browser applies by default (you never wrote this)</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="cm">/* Browser default styles — applied before your CSS */</span>
+<span class="obj">h1</span> { <span class="prop">font-size</span>: <span class="num">2em</span>; <span class="prop">font-weight</span>: bold; <span class="prop">margin</span>: <span class="num">0.67em 0</span>; }
+<span class="obj">p</span>  { <span class="prop">margin</span>: <span class="num">1em 0</span>; }
+<span class="obj">a</span>  { <span class="prop">color</span>: blue; <span class="prop">text-decoration</span>: underline; }
+<span class="obj">ul</span> { <span class="prop">list-style-type</span>: disc; <span class="prop">padding-left</span>: <span class="num">40px</span>; }
+<span class="obj">body</span> { <span class="prop">margin</span>: <span class="num">8px</span>; } <span class="cm">/* That gap around the page edge? This. */</span>
+
+<span class="cm">/* Common reset to neutralize browser defaults */</span>
+* {
+  <span class="prop">margin</span>:     <span class="num">0</span>;
+  <span class="prop">padding</span>:    <span class="num">0</span>;
+  <span class="prop">box-sizing</span>: border-box; <span class="cm">/* padding/border included in width */</span>
+}</code></pre>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- STYLE.CSS COMMON PROPERTIES -->
+    <h3 style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:12px;letter-spacing:-0.5px;">Common <span style="color:var(--accent)">Properties</span> in style.css</h3>
+    <p class="topic-prose">These are the properties you'll use constantly in every project — spacing, typography, sizing, and color.</p>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">CSS — Spacing, Typography &amp; Sizing</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="obj">.box</span> {
+  <span class="cm">/* SPACING */</span>
+  <span class="prop">margin</span>:  <span class="num">20px</span>;           <span class="cm">/* space OUTSIDE the element (pushes away neighbors) */</span>
+  <span class="prop">margin</span>:  <span class="num">10px 20px</span>;       <span class="cm">/* top/bottom  left/right */</span>
+  <span class="prop">margin</span>:  <span class="num">10px 20px 5px 0</span>; <span class="cm">/* top right bottom left (clockwise) */</span>
+  <span class="prop">padding</span>: <span class="num">16px</span>;            <span class="cm">/* space INSIDE the element (between border &amp; content) */</span>
+
+  <span class="cm">/* SIZING */</span>
+  <span class="prop">width</span>:      <span class="num">300px</span>;
+  <span class="prop">max-width</span>:  <span class="num">100%</span>;          <span class="cm">/* never exceed this width */</span>
+  <span class="prop">height</span>:     <span class="num">200px</span>;
+  <span class="prop">min-height</span>: <span class="num">100vh</span>;         <span class="cm">/* at least full viewport height */</span>
+
+  <span class="cm">/* TYPOGRAPHY */</span>
+  <span class="prop">font-size</span>:   <span class="num">16px</span>;
+  <span class="prop">font-weight</span>: <span class="num">700</span>;           <span class="cm">/* 400=normal 700=bold */</span>
+  <span class="prop">line-height</span>: <span class="num">1.6</span>;           <span class="cm">/* 1.6× the font-size, improves readability */</span>
+  <span class="prop">letter-spacing</span>: <span class="num">0.5px</span>;
+  <span class="prop">text-transform</span>: uppercase;  <span class="cm">/* lowercase | capitalize */</span>
+  <span class="prop">text-decoration</span>: none;      <span class="cm">/* removes underline from links */</span>
+  <span class="prop">color</span>: <span class="num">#333</span>;
+
+  <span class="cm">/* BACKGROUND &amp; BORDER */</span>
+  <span class="prop">background-color</span>: <span class="num">#fff</span>;
+  <span class="prop">border</span>: <span class="num">1px</span> solid <span class="num">#ccc</span>;    <span class="cm">/* width style color */</span>
+  <span class="prop">border-radius</span>: <span class="num">8px</span>;         <span class="cm">/* rounds corners */</span>
+  <span class="prop">box-shadow</span>: <span class="num">0 4px 12px rgba(0,0,0,0.1)</span>;
+}</code></pre>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- TEXT-ALIGN VS ALIGN-ITEMS -->
+    <h3 style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:12px;letter-spacing:-0.5px;"><span style="color:var(--accent2)">text-align</span> vs <span style="color:var(--accent3)">align-items</span></h3>
+    <p class="topic-prose">These are the most commonly confused CSS properties. They look similar but work completely differently.</p>
+
+    <div class="card-grid">
+      <div class="card red">
+        <div class="card-title">text-align</div>
+        <p><strong>Aligns inline content</strong> (text, inline elements) <strong>horizontally</strong> within its block container.</p>
+        <p style="margin-top:8px;">Works on: <strong>the parent</strong> that contains the text.</p>
+        <p style="margin-top:8px;">Values: <span class="ic">left</span> <span class="ic">center</span> <span class="ic">right</span> <span class="ic">justify</span></p>
+        <p style="margin-top:8px;color:var(--muted);">e.g. centering text inside a <span class="ic">&lt;p&gt;</span> or <span class="ic">&lt;div&gt;</span></p>
+      </div>
+      <div class="card blue">
+        <div class="card-title">align-items</div>
+        <p><strong>Aligns flex/grid children</strong> along the <strong>cross axis</strong> (perpendicular to the main axis).</p>
+        <p style="margin-top:8px;">Works on: <strong>the flex/grid container</strong> — has no effect without <span class="ic">display: flex</span>.</p>
+        <p style="margin-top:8px;">Values: <span class="ic">flex-start</span> <span class="ic">center</span> <span class="ic">flex-end</span> <span class="ic">stretch</span></p>
+        <p style="margin-top:8px;color:var(--muted);">e.g. vertically centering items inside a flex row</p>
+      </div>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">CSS — text-align vs align-items</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="cm">/* text-align: for text/inline content inside a block */</span>
+<span class="obj">.heading</span> {
+  <span class="prop">text-align</span>: center; <span class="cm">/* centers the text horizontally */</span>
+}
+
+<span class="cm">/* align-items: for flex/grid children on the cross axis */</span>
+<span class="obj">.navbar</span> {
+  <span class="prop">display</span>:      flex;
+  <span class="prop">align-items</span>:  center; <span class="cm">/* vertically centers children in the row */</span>
+  <span class="prop">justify-content</span>: space-between; <span class="cm">/* main axis (horizontal here) */</span>
+}
+
+<span class="cm">/* Common confusion: text-align on a flex container */</span>
+<span class="obj">.card</span> {
+  <span class="prop">display</span>: flex;
+  <span class="prop">text-align</span>: center;  <span class="cm">/* ✓ still works for text inside children */</span>
+  <span class="prop">align-items</span>: center; <span class="cm">/* ✓ vertically centers the flex children */</span>
+}</code></pre>
+    </div>
+
+    <div class="note-box"><strong>// Rule of thumb:</strong> <span class="ic">text-align</span> = for text. <span class="ic">align-items</span> = for boxes/elements inside a flex or grid container. If you want to center both text AND elements, you often need both.</div>
+
+    <div class="divider"></div>
+
+    <!-- CSS POSITIONS -->
+    <h3 style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:12px;letter-spacing:-0.5px;">CSS <span style="color:var(--accent4)">Positions</span></h3>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-title">static</div>
+        <p>Default for every element. Follows normal document flow. <strong>top / left / right / bottom have no effect whatsoever.</strong></p>
+      </div>
+      <div class="card blue">
+        <div class="card-title">relative</div>
+        <p>Offset from its own normal position. <strong>Original space is still reserved</strong> — neighbours don't move. Good for minor nudges or creating a positioned parent for absolute children.</p>
+      </div>
+      <div class="card yellow">
+        <div class="card-title">absolute</div>
+        <p><strong>Removed from normal flow</strong> entirely. Positioned relative to the nearest ancestor that has <span class="ic">position: relative/absolute/fixed</span>. Other elements act like it doesn't exist.</p>
+      </div>
+      <div class="card red">
+        <div class="card-title">fixed</div>
+        <p>Positioned relative to the <strong>viewport</strong>. Doesn't move on scroll. Used for navbars, floating buttons, modals. <strong>Removed from normal flow.</strong></p>
+      </div>
+      <div class="card">
+        <div class="card-title">sticky</div>
+        <p>Hybrid of relative + fixed. <strong>Acts relative</strong> while in view, then <strong>sticks</strong> when you scroll past its threshold. Requires <span class="ic">top</span> (or left/right/bottom) to activate.</p>
+      </div>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">CSS — Positioning Examples</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="cm">/* relative: small nudge, still in flow */</span>
+<span class="obj">.badge</span> { <span class="prop">position</span>: relative; <span class="prop">top</span>: -<span class="num">2px</span>; }
+
+<span class="cm">/* absolute inside relative parent — classic pattern */</span>
+<span class="obj">.card</span>    { <span class="prop">position</span>: relative; }
+<span class="obj">.overlay</span> { <span class="prop">position</span>: absolute; <span class="prop">top</span>: <span class="num">0</span>; <span class="prop">left</span>: <span class="num">0</span>; <span class="prop">width</span>: <span class="num">100%</span>; <span class="prop">height</span>: <span class="num">100%</span>; }
+
+<span class="cm">/* fixed navbar — always at top of viewport */</span>
+<span class="obj">.navbar</span> { <span class="prop">position</span>: fixed; <span class="prop">top</span>: <span class="num">0</span>; <span class="prop">left</span>: <span class="num">0</span>; <span class="prop">width</span>: <span class="num">100%</span>; }
+
+<span class="cm">/* sticky table header — sticks when you scroll table */</span>
+<span class="obj">th</span> { <span class="prop">position</span>: sticky; <span class="prop">top</span>: <span class="num">0</span>; <span class="prop">background</span>: <span class="num">#fff</span>; }
+<span class="cm">/* ⚠ Won't work if a parent has overflow: hidden/auto */</span></code></pre>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- FLEXBOX -->
+    <h3 style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:12px;letter-spacing:-0.5px;">Flex <span style="color:var(--accent)">Layout</span></h3>
+    <p class="topic-prose">Flexbox is a <strong>one-dimensional</strong> layout system — it arranges items in a row <strong>or</strong> a column. Perfect for navbars, card rows, centering content, and any time items need to be spaced or aligned along one axis.</p>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-title">Main Axis vs Cross Axis</div>
+        <p>The <strong>main axis</strong> is the direction items flow (<span class="ic">row</span> = horizontal, <span class="ic">column</span> = vertical). The <strong>cross axis</strong> is always perpendicular to it. <span class="ic">justify-content</span> controls main axis, <span class="ic">align-items</span> controls cross axis.</p>
+      </div>
+      <div class="card yellow">
+        <div class="card-title">flex-wrap</div>
+        <p>By default, flex items squish to fit one line (<span class="ic">nowrap</span>). Set <span class="ic">flex-wrap: wrap</span> to let them overflow onto the next line when they run out of space — great for responsive grids.</p>
+      </div>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">CSS — Flexbox Complete Reference</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="cm">/* === CONTAINER PROPERTIES === */</span>
+<span class="obj">.container</span> {
+  <span class="prop">display</span>:         flex;
+  <span class="prop">flex-direction</span>:  row;            <span class="cm">/* row | row-reverse | column | column-reverse */</span>
+  <span class="prop">flex-wrap</span>:       wrap;           <span class="cm">/* nowrap | wrap | wrap-reverse */</span>
+
+  <span class="cm">/* Main axis (horizontal by default) */</span>
+  <span class="prop">justify-content</span>: space-between;  <span class="cm">/* flex-start | center | flex-end | space-around | space-evenly */</span>
+
+  <span class="cm">/* Cross axis (vertical by default) */</span>
+  <span class="prop">align-items</span>:     center;         <span class="cm">/* flex-start | center | flex-end | stretch | baseline */</span>
+
+  <span class="prop">gap</span>: <span class="num">16px</span>;                        <span class="cm">/* space between items (row-gap column-gap) */</span>
+}
+
+<span class="cm">/* === ITEM PROPERTIES === */</span>
+<span class="obj">.item</span> {
+  <span class="prop">flex</span>: <span class="num">1</span>;          <span class="cm">/* shorthand for flex-grow:1 flex-shrink:1 flex-basis:0 */</span>
+                    <span class="cm">/* all items grow equally to fill available space */</span>
+  <span class="prop">flex-grow</span>: <span class="num">1</span>;     <span class="cm">/* how much this item grows relative to others */</span>
+  <span class="prop">flex-shrink</span>: <span class="num">0</span>;  <span class="cm">/* 0 = refuse to shrink below flex-basis */</span>
+  <span class="prop">flex-basis</span>: <span class="num">200px</span>; <span class="cm">/* starting size before grow/shrink kicks in */</span>
+  <span class="prop">align-self</span>: flex-end; <span class="cm">/* override align-items for THIS item only */</span>
+}
+
+<span class="cm">/* Common pattern: perfect centering */</span>
+<span class="obj">.center</span> {
+  <span class="prop">display</span>:         flex;
+  <span class="prop">justify-content</span>: center;
+  <span class="prop">align-items</span>:     center;
+}</code></pre>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- CSS GRID -->
+    <h3 style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:12px;letter-spacing:-0.5px;">Grid <span style="color:var(--accent2)">Layout</span></h3>
+    <p class="topic-prose">Grid is a <strong>two-dimensional</strong> layout system — it controls both rows <strong>and</strong> columns simultaneously. Perfect for page layouts, dashboards, image galleries, and any structure that has both horizontal and vertical arrangement.</p>
+
+    <div class="card-grid">
+      <div class="card blue">
+        <div class="card-title">fr unit</div>
+        <p>The <span class="ic">fr</span> (fraction) unit divides the remaining available space. <span class="ic">1fr 1fr 1fr</span> = three equal columns. <span class="ic">2fr 1fr</span> = first column is twice as wide as the second.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">repeat()</div>
+        <p><span class="ic">repeat(4, 1fr)</span> is shorthand for <span class="ic">1fr 1fr 1fr 1fr</span>. Use <span class="ic">repeat(auto-fill, minmax(200px, 1fr))</span> for a responsive grid with no media queries.</p>
+      </div>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">CSS — Grid Complete Reference</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="cm">/* === CONTAINER PROPERTIES === */</span>
+<span class="obj">.grid</span> {
+  <span class="prop">display</span>:               grid;
+  <span class="prop">grid-template-columns</span>: <span class="num">1fr 1fr 1fr 1fr</span>;      <span class="cm">/* 4 equal columns */</span>
+  <span class="prop">grid-template-columns</span>: repeat(<span class="num">4</span>, <span class="num">1fr</span>);       <span class="cm">/* same, shorthand */</span>
+  <span class="prop">grid-template-columns</span>: repeat(auto-fill, minmax(<span class="num">200px</span>, <span class="num">1fr</span>)); <span class="cm">/* responsive! */</span>
+  <span class="prop">grid-template-rows</span>:    <span class="num">100px</span> auto <span class="num">60px</span>;       <span class="cm">/* header auto footer */</span>
+  <span class="prop">gap</span>:        <span class="num">16px</span>;                             <span class="cm">/* gap between all cells */</span>
+  <span class="prop">row-gap</span>:    <span class="num">20px</span>;                             <span class="cm">/* gap between rows only */</span>
+  <span class="prop">column-gap</span>: <span class="num">10px</span>;                             <span class="cm">/* gap between columns only */</span>
+}
+
+<span class="cm">/* === ITEM PLACEMENT (two ways) === */</span>
+
+<span class="cm">/* Longhand */</span>
+<span class="obj">.hero</span> {
+  <span class="prop">grid-column-start</span>: <span class="num">1</span>;   <span class="cm">/* start at column line 1 */</span>
+  <span class="prop">grid-column-end</span>:   <span class="num">3</span>;   <span class="cm">/* end at column line 3 (spans 2 columns) */</span>
+  <span class="prop">grid-row-start</span>:    <span class="num">1</span>;
+  <span class="prop">grid-row-end</span>:      <span class="num">2</span>;
+}
+
+<span class="cm">/* Shorthand (preferred) */</span>
+<span class="obj">.hero</span> {
+  <span class="prop">grid-column</span>: <span class="num">1</span> <span class="op">/</span> <span class="num">3</span>;  <span class="cm">/* start / end */</span>
+  <span class="prop">grid-column</span>: <span class="num">1</span> <span class="op">/</span> span <span class="num">2</span>; <span class="cm">/* start / span count (same result) */</span>
+  <span class="prop">grid-row</span>:    <span class="num">1</span> <span class="op">/</span> <span class="num">2</span>;
+}
+
+<span class="cm">/* span entire row */</span>
+<span class="obj">.full-width</span> { <span class="prop">grid-column</span>: <span class="num">1</span> <span class="op">/</span> -<span class="num">1</span>; } <span class="cm">/* -1 = last line */</span></code></pre>
+    </div>
+
+    <div class="note-box"><strong>// Flex vs Grid:</strong> Use <strong>Flex</strong> when you have a single row/column of items and want them to flow and space themselves. Use <strong>Grid</strong> when you have a two-dimensional layout with both rows and columns to control.</div>
+  </section>
+
+  <!-- ======================== SECTION 13b: TAILWIND ======================== -->
+  <section class="section" id="tailwind">
+    <div class="section-label">
+      <span class="section-num">13b — Tailwind CSS</span>
+      <div class="section-line"></div>
+    </div>
+    <h2 class="section-title">Tailwind <span class="hl3">CSS</span></h2>
+    <p class="topic-prose">Tailwind is a <strong>utility-first CSS framework</strong>. Instead of writing custom CSS, you compose styles by applying small utility classes directly in your HTML. The build process scans your HTML and generates only the CSS you actually used — nothing more.</p>
+
+    <div class="card-grid">
+      <div class="card blue">
+        <div class="card-title">How the Build Works</div>
+        <p>The Tailwind CLI scans your HTML, finds every utility class you used (e.g. <span class="ic">text-red-500</span>, <span class="ic">flex</span>, <span class="ic">p-4</span>), and writes a minimal <strong>output.css</strong> containing only those styles. The result is an extremely lean CSS file in production.</p>
+      </div>
+      <div class="card yellow">
+        <div class="card-title">Utility-First Philosophy</div>
+        <p>No switching between HTML and CSS files. Every style lives directly on the element as a class. Faster to build, and you can see what an element looks like just by reading its HTML markup.</p>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- PREFLIGHT -->
+    <h3 style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:12px;letter-spacing:-0.5px;">Tailwind <span style="color:var(--accent2)">Preflight</span></h3>
+    <p class="topic-prose">Preflight is Tailwind's built-in CSS reset, automatically injected when you add <span class="ic">@tailwind base</span> to your input CSS. It removes all browser default styles so you start from a completely clean, consistent baseline across every browser.</p>
+
+    <div class="card-grid">
+      <div class="card red">
+        <div class="card-title">What Preflight Removes</div>
+        <p>All default margins and padding. Default <span class="ic">h1–h6</span> sizes and bold weights. Bullet points on <span class="ic">ul/ol</span>. Blue underline on <span class="ic">&lt;a&gt;</span>. Default border on <span class="ic">&lt;button&gt;</span>. The <span class="ic">8px</span> body margin.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">What Preflight Adds</div>
+        <p>Sets <span class="ic">box-sizing: border-box</span> on everything. Makes images <span class="ic">display: block</span> by default (removes inline bottom gap). Inherits font on form elements. Sets <span class="ic">line-height</span> to a sane default.</p>
+      </div>
+      <div class="card blue">
+        <div class="card-title">Why It Matters</div>
+        <p>Without Preflight, a Tailwind <span class="ic">&lt;h1&gt;</span> would still be huge and bold — you'd need <span class="ic">text-base font-normal</span> to fight the browser. With Preflight, <span class="ic">&lt;h1&gt;</span> looks identical to <span class="ic">&lt;p&gt;</span> until YOU add classes.</p>
+      </div>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">CSS — What Preflight does under the hood (simplified)</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="cm">/* Preflight essentially does this for you: */</span>
+*, *::before, *::after {
+  <span class="prop">box-sizing</span>: border-box; <span class="cm">/* padding/border included in width */</span>
+  <span class="prop">border-width</span>: <span class="num">0</span>;
+  <span class="prop">border-style</span>: solid;
+}
+
+<span class="obj">body</span> { <span class="prop">margin</span>: <span class="num">0</span>; <span class="prop">line-height</span>: inherit; }
+
+<span class="cm">/* headings reset — no size, no weight */</span>
+<span class="obj">h1, h2, h3, h4, h5, h6</span> { <span class="prop">font-size</span>: inherit; <span class="prop">font-weight</span>: inherit; }
+
+<span class="cm">/* links reset — no color, no underline */</span>
+<span class="obj">a</span> { <span class="prop">color</span>: inherit; <span class="prop">text-decoration</span>: inherit; }
+
+<span class="cm">/* lists reset — no bullets, no padding */</span>
+<span class="obj">ol, ul</span> { <span class="prop">list-style</span>: none; <span class="prop">margin</span>: <span class="num">0</span>; <span class="prop">padding</span>: <span class="num">0</span>; }
+
+<span class="cm">/* images block — removes bottom whitespace gap */</span>
+<span class="obj">img, svg, video</span> { <span class="prop">display</span>: block; <span class="prop">vertical-align</span>: middle; }
+
+<span class="cm">/* buttons reset */</span>
+<span class="obj">button</span> { <span class="prop">background-color</span>: transparent; <span class="prop">background-image</span>: none; }</code></pre>
+    </div>
+
+    <div class="warn-box"><strong>⚠ Preflight side effect:</strong> After adding Tailwind, all your existing unstyled HTML elements will look plain and unstyled. A <span class="ic">&lt;button&gt;</span> loses its 3D border. An <span class="ic">&lt;h1&gt;</span> looks like normal text. This is intentional — you now add all styles explicitly via Tailwind classes.</div>
+
+    <div class="divider"></div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">Shell — Step 1: Install Tailwind CLI</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="cm"># Install Tailwind CSS as a dev dependency</span>
+npm install -D tailwindcss @tailwindcss/cli
+
+<span class="cm"># OR use it without installing via npx (no install needed)</span>
+npx @tailwindcss/cli --help</code></pre>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">CSS — Step 2: Create your input style.css</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="cm">/* style.css — this is your INPUT file, not what you link in HTML */</span>
+<span class="cm">/* These 3 directives import all of Tailwind's layers */</span>
+@<span class="kw">tailwind</span> base;        <span class="cm">/* Resets + base element styles */</span>
+@<span class="kw">tailwind</span> components;  <span class="cm">/* Component classes (rarely used) */</span>
+@<span class="kw">tailwind</span> utilities;   <span class="cm">/* All the utility classes like flex, p-4, etc. */</span></code></pre>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">Shell — Step 3: Run the CLI in Watch Mode</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="cm"># -i ./style.css   → your input file with @tailwind directives</span>
+<span class="cm"># -o ./output.css  → the generated file (link THIS in your HTML)</span>
+<span class="cm"># --watch          → auto-rebuilds whenever you save any file</span>
+npx @tailwindcss/cli -i ./style.css -o ./output.css --watch
+
+<span class="cm"># Add as an npm script in package.json for convenience:</span>
+<span class="cm"># "scripts": { "tw": "npx @tailwindcss/cli -i ./style.css -o ./output.css --watch" }</span>
+<span class="cm"># Then just run: npm run tw</span></code></pre>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">HTML — Step 4: Link the OUTPUT file in your HTML</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code>&lt;<span class="fn">head</span>&gt;
+  <span class="cm">&lt;!-- Link output.css, NOT style.css --&gt;</span>
+  &lt;<span class="fn">link</span> <span class="prop">rel</span>=<span class="str">"stylesheet"</span> <span class="prop">href</span>=<span class="str">"./output.css"</span>&gt;
+&lt;/<span class="fn">head</span>&gt;
+&lt;<span class="fn">body</span>&gt;
+  <span class="cm">&lt;!-- Now use Tailwind classes freely --&gt;</span>
+  &lt;<span class="fn">div</span> <span class="prop">class</span>=<span class="str">"flex gap-4 p-6 bg-gray-900 rounded-lg"</span>&gt;
+
+    &lt;<span class="fn">button</span> <span class="prop">class</span>=<span class="str">"px-4 py-2 bg-emerald-400 text-black font-bold
+                   rounded hover:bg-emerald-300 transition-colors"</span>&gt;
+      Click me
+    &lt;/<span class="fn">button</span>&gt;
+
+    <span class="cm">&lt;!-- sm: md: lg: are responsive breakpoint prefixes --&gt;</span>
+    &lt;<span class="fn">p</span> <span class="prop">class</span>=<span class="str">"text-sm md:text-base lg:text-lg text-gray-400"</span>&gt;
+      Responsive text
+    &lt;/<span class="fn">p</span>&gt;
+
+  &lt;/<span class="fn">div</span>&gt;
+&lt;/<span class="fn">body</span>&gt;</code></pre>
+    </div>
+
+    <div class="divider"></div>
+
+    <h3 style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:16px;letter-spacing:-0.5px;">
+      Tailwind <span style="color:var(--accent2)">Intellisense</span> in VS Code
+    </h3>
+    <p class="topic-prose">Without Intellisense, you're typing Tailwind classes from memory. The official VS Code extension gives you <strong>autocomplete, hover previews, and linting</strong> — essential for real development speed.</p>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-title">Autocomplete</div>
+        <p>As you type inside a <span class="ic">class=""</span> attribute, it suggests every matching Tailwind class. Press Tab to complete. Shows the actual CSS value it maps to alongside.</p>
+      </div>
+      <div class="card blue">
+        <div class="card-title">Hover Preview</div>
+        <p>Hover over any Tailwind class in your HTML and a tooltip shows you the <strong>exact CSS it generates</strong>. No more guessing what <span class="ic">p-6</span> or <span class="ic">text-xl</span> actually outputs.</p>
+      </div>
+      <div class="card yellow">
+        <div class="card-title">Class Sorting (Prettier)</div>
+        <p>Install the <strong>Prettier plugin for Tailwind</strong> to auto-sort your classes into a consistent recommended order every time you save. Keeps code readable across teams.</p>
+      </div>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">Shell — Installing Intellisense &amp; Prettier Plugin</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="cm"># Step 1: Install the VS Code extension</span>
+<span class="cm"># Open VS Code → Extensions (Ctrl+Shift+X)</span>
+<span class="cm"># Search: "Tailwind CSS IntelliSense" by Tailwind Labs → Install</span>
+
+<span class="cm"># Step 2 (Optional but recommended): Auto-sort classes with Prettier</span>
+npm install -D prettier prettier-plugin-tailwindcss
+
+<span class="cm"># Create a .prettierrc file in your project root:</span>
+<span class="cm"># {</span>
+<span class="cm">#   "plugins": ["prettier-plugin-tailwindcss"]</span>
+<span class="cm"># }</span>
+
+<span class="cm"># Now every time you save, classes sort automatically!</span></code></pre>
+    </div>
+
+    <div class="note-box"><strong>// Intellisense tip:</strong> The extension works automatically once installed — it detects Tailwind classes in <span class="ic">class=""</span>, <span class="ic">className=""</span> (React), and even inside template literals. No extra config needed for basic use.</div>
+    <div class="warn-box"><strong>⚠ Common mistake:</strong> Linking <span class="ic">style.css</span> (input) instead of <span class="ic">output.css</span> (generated) in your HTML. Your page will have zero styles. Always link the <strong>output</strong> file.</div>
+  </section>
+
+  <!-- ======================== SECTION 14: REACT CORE ======================== -->
+  <section class="section" id="react-core">
+    <div class="section-label">
+      <span class="section-num">14 — React</span>
+      <div class="section-line"></div>
+    </div>
+    <h2 class="section-title">React <span class="hl">Core</span> Concepts</h2>
+    <p class="topic-prose">React uses a <strong>Virtual DOM</strong> — a lightweight in-memory representation of the real DOM. When state changes, React diffs the virtual DOM and updates only the changed parts in the real DOM.</p>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-title">Declarative vs Imperative</div>
+        <p>React is <strong>declarative</strong>: you describe what the UI should look like for a given state. React figures out the DOM operations. Vanilla JS is imperative: you write each DOM step manually.</p>
+      </div>
+      <div class="card blue">
+        <div class="card-title">Rendering Lists</div>
+        <p>Use <strong>.map()</strong> to loop through data and return JSX. Always provide a unique <span class="ic">key</span> prop to help React track elements efficiently.</p>
+      </div>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">JSX — Conditional Rendering Alternatives</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="cm">// Alt 1: Ternary Operator — if/else, always use this for two outcomes</span>
+{ <span class="obj">isActive</span> <span class="op">?</span> <span class="str">&lt;ActiveComponent /&gt;</span> <span class="op">:</span> <span class="str">&lt;InactiveComponent /&gt;</span> }
+
+<span class="cm">// Alt 2: Logical AND — render only if true (no else needed)</span>
+{ <span class="obj">isActive</span> <span class="op">&amp;&amp;</span> <span class="str">&lt;ActiveComponent /&gt;</span> }
+
+<span class="cm">// Rendering a list with .map()</span>
+{ <span class="obj">marks</span>.<span class="fn">map</span>((<span class="prop">m</span>, <span class="prop">i</span>) <span class="op">=></span> <span class="str">&lt;div key=&#123;i&#125;&gt;&#123;m&#125;&lt;/div&gt;</span>) }</code></pre>
+    </div>
+  </section>
+
+  <!-- ======================== SECTION 15: STATE ======================== -->
+  <section class="section" id="react-state">
+    <div class="section-label">
+      <span class="section-num">15 — State</span>
+      <div class="section-line"></div>
+    </div>
+    <h2 class="section-title">State <span class="hl2">&amp; Mutations</span></h2>
+    <div class="warn-box"><strong>⚠ Golden Rule:</strong> NEVER mutate state directly. Always create a new copy using spread or array methods that return new arrays. Direct mutation won't trigger a re-render.</div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">JSX — Array &amp; Object State</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="kw">let</span> [<span class="obj">marks</span>, <span class="fn">setMarks</span>] <span class="op">=</span> <span class="fn">useState</span>([<span class="num">1</span>, <span class="num">2</span>]);
+
+<span class="cm">// Add: Spread creates new array, triggers re-render</span>
+<span class="kw">const</span> <span class="fn">pushed</span> <span class="op">=</span> () <span class="op">=></span> {
+  <span class="fn">setMarks</span>([...<span class="obj">marks</span>, <span class="num">123</span>]);
+};
+
+<span class="cm">// Delete: filter() returns a brand new array</span>
+<span class="kw">const</span> <span class="fn">delMark</span> <span class="op">=</span> (<span class="prop">index</span>) <span class="op">=></span> {
+  <span class="fn">setMarks</span>(<span class="obj">marks</span>.<span class="fn">filter</span>((_, <span class="prop">i</span>) <span class="op">=></span> <span class="prop">i</span> <span class="op">!==</span> <span class="prop">index</span>));
+};
+
+<span class="cm">// Object State: spread existing, then override property</span>
+<span class="kw">let</span> [<span class="obj">user</span>, <span class="fn">setUser</span>] <span class="op">=</span> <span class="fn">useState</span>({ <span class="prop">email</span>: <span class="str">"<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="aedacbdddaeec3cfc7c280cdc1c3">[email&#160;protected]</a>"</span> });
+
+<span class="kw">const</span> <span class="fn">updateCity</span> <span class="op">=</span> () <span class="op">=></span> {
+  <span class="fn">setUser</span>({ ...<span class="obj">user</span>, <span class="prop">city</span>: <span class="str">"hyd"</span> }); <span class="cm">// New object, all old fields kept</span>
+};</code></pre>
+    </div>
+  </section>
+
+  <!-- ======================== SECTION 16: FORMS ======================== -->
+  <section class="section" id="react-forms">
+    <div class="section-label">
+      <span class="section-num">16 — Forms</span>
+      <div class="section-line"></div>
+    </div>
+    <h2 class="section-title">Form <span class="hl3">Handling</span></h2>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">Shell — Installation</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="cm"># Install react-hook-form</span>
+npm install react-hook-form</code></pre>
+    </div>
+
+    <div class="card-grid">
+      <div class="card yellow">
+        <div class="card-title">Alt 1: Vanilla React</div>
+        <p>Verbose. Requires separate <span class="ic">useState</span> for every single input field, plus manual <span class="ic">onChange</span> handlers and value bindings. Gets messy fast.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Alt 2: react-hook-form</div>
+        <p>Designed for performance. Minimal re-renders, built-in validation, single <span class="ic">register</span> call per input. <strong>Preferred approach.</strong></p>
+      </div>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">JSX — react-hook-form</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="kw">import</span> { <span class="fn">useForm</span> } <span class="kw">from</span> <span class="str">'react-hook-form'</span>;
+
+<span class="kw">function</span> <span class="fn">MyForm</span>() {
+  <span class="kw">const</span> { <span class="fn">register</span>, <span class="fn">handleSubmit</span> } <span class="op">=</span> <span class="fn">useForm</span>();
+
+  <span class="kw">const</span> <span class="fn">submitForm</span> <span class="op">=</span> (<span class="prop">data</span>) <span class="op">=></span> {
+    console.<span class="fn">log</span>(<span class="prop">data</span>); <span class="cm">// { username: "...", email: "..." }</span>
+  };
+
+  <span class="kw">return</span> (
+    <span class="cm">// handleSubmit: validates then passes data to submitForm</span>
+    &lt;<span class="fn">form</span> <span class="prop">onSubmit</span>={<span class="fn">handleSubmit</span>(<span class="fn">submitForm</span>)}&gt;
+      <span class="cm">// register: injects onChange/onBlur, names the field</span>
+      &lt;<span class="fn">input</span> {...<span class="fn">register</span>(<span class="str">"username"</span>)} /&gt;
+      &lt;<span class="fn">input</span> {...<span class="fn">register</span>(<span class="str">"email"</span>)}    /&gt;
+      &lt;<span class="fn">button</span>&gt;Submit&lt;/<span class="fn">button</span>&gt;
+    &lt;/<span class="fn">form</span>&gt;
+  );
+}</code></pre>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">JSX — react-hook-form with Validation Rules</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="kw">function</span> <span class="fn">MyForm</span>() {
+  <span class="kw">const</span> { <span class="fn">register</span>, <span class="fn">handleSubmit</span>, <span class="prop">formState</span>: { <span class="prop">errors</span> } } <span class="op">=</span> <span class="fn">useForm</span>();
+
+  <span class="kw">return</span> (
+    &lt;<span class="fn">form</span> <span class="prop">onSubmit</span>={<span class="fn">handleSubmit</span>(<span class="prop">data</span> <span class="op">=></span> console.<span class="fn">log</span>(<span class="prop">data</span>))}&gt;
+
+      &lt;<span class="fn">input</span>
+        {...<span class="fn">register</span>(<span class="str">"username"</span>, {
+          <span class="prop">required</span>: <span class="str">"Username is required"</span>,         <span class="cm">// message shown on error</span>
+          <span class="prop">minLength</span>: { <span class="prop">value</span>: <span class="num">3</span>, <span class="prop">message</span>: <span class="str">"Min 3 chars"</span> },
+          <span class="prop">maxLength</span>: { <span class="prop">value</span>: <span class="num">20</span>, <span class="prop">message</span>: <span class="str">"Max 20 chars"</span> },
+        })}
+      /&gt;
+      { <span class="obj">errors</span>.<span class="prop">username</span> <span class="op">&amp;&amp;</span> &lt;<span class="fn">span</span>&gt;{<span class="obj">errors</span>.<span class="prop">username</span>.<span class="prop">message</span>}&lt;/<span class="fn">span</span>&gt; }
+
+      &lt;<span class="fn">input</span>
+        {...<span class="fn">register</span>(<span class="str">"email"</span>, {
+          <span class="prop">required</span>: <span class="str">"Email required"</span>,
+          <span class="prop">pattern</span>: {
+            <span class="prop">value</span>: <span class="str">/^[^\s@]+@[^\s@]+\.[^\s@]+$/</span>,
+            <span class="prop">message</span>: <span class="str">"Invalid email format"</span>
+          }
+        })}
+      /&gt;
+      { <span class="obj">errors</span>.<span class="prop">email</span> <span class="op">&amp;&amp;</span> &lt;<span class="fn">span</span>&gt;{<span class="obj">errors</span>.<span class="prop">email</span>.<span class="prop">message</span>}&lt;/<span class="fn">span</span>&gt; }
+
+      &lt;<span class="fn">button</span>&gt;Submit&lt;/<span class="fn">button</span>&gt;
+    &lt;/<span class="fn">form</span>&gt;
+  );
+}</code></pre>
+    </div>
+  </section>
+
+  <!-- ======================== SECTION 17: USEEFFECT ======================== -->
+  <section class="section" id="react-effects">
+    <div class="section-label">
+      <span class="section-num">17 — Side Effects</span>
+      <div class="section-line"></div>
+    </div>
+    <h2 class="section-title">useEffect <span class="hl">&amp; Side Effects</span></h2>
+    <p class="topic-prose">Manages operations <strong>outside the normal render cycle</strong> — API calls, subscriptions, timers, DOM manipulation. Runs after the component renders to the screen.</p>
+
+    <div class="hook-grid">
+      <div class="hook-card">
+        <div class="hook-head">
+          <div class="hook-icon red"></div>
+          <div class="hook-name">No Dependency Array</div>
+        </div>
+        <div class="hook-body">
+          <p>Runs after <strong>every single render</strong>. Dangerous — causes infinite loops if you set state inside. Almost always wrong.</p>
+        </div>
+      </div>
+      <div class="hook-card">
+        <div class="hook-head">
+          <div class="hook-icon"></div>
+          <div class="hook-name">Empty Array []</div>
+        </div>
+        <div class="hook-body">
+          <p>Runs <strong>only once</strong> after the initial render. Perfect for initial data fetching, subscriptions, and setup.</p>
+        </div>
+      </div>
+      <div class="hook-card">
+        <div class="hook-head">
+          <div class="hook-icon blue"></div>
+          <div class="hook-name">[state1] With Dependencies</div>
+        </div>
+        <div class="hook-body">
+          <p>Runs on initial render AND whenever <strong>any listed dependency changes</strong>. Great for re-fetching on filter/search changes.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">JSX — useEffect</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="kw">import</span> { <span class="fn">useEffect</span>, <span class="fn">useState</span> } <span class="kw">from</span> <span class="str">'react'</span>;
+
+<span class="kw">const</span> [<span class="obj">data</span>, <span class="fn">setData</span>] <span class="op">=</span> <span class="fn">useState</span>([]);
+<span class="kw">const</span> [<span class="obj">filter</span>, <span class="fn">setFilter</span>] <span class="op">=</span> <span class="fn">useState</span>(<span class="str">'all'</span>);
+
+<span class="cm">// Run once on mount — initial data fetch</span>
+<span class="fn">useEffect</span>(() <span class="op">=></span> {
+  <span class="fn">fetch</span>(<span class="str">'https://api.example.com/data'</span>)
+    .<span class="fn">then</span>(<span class="prop">r</span> <span class="op">=></span> <span class="prop">r</span>.<span class="fn">json</span>())
+    .<span class="fn">then</span>(<span class="prop">d</span> <span class="op">=></span> <span class="fn">setData</span>(<span class="prop">d</span>));
+}, []); <span class="cm">// ← Empty array = mount only</span>
+
+<span class="cm">// Re-run whenever 'filter' changes</span>
+<span class="fn">useEffect</span>(() <span class="op">=></span> {
+  <span class="fn">fetch</span>(<span class="str">`https://api.example.com/data?type=</span>${<span class="obj">filter</span>}<span class="str">`</span>)
+    .<span class="fn">then</span>(<span class="prop">r</span> <span class="op">=></span> <span class="prop">r</span>.<span class="fn">json</span>())
+    .<span class="fn">then</span>(<span class="prop">d</span> <span class="op">=></span> <span class="fn">setData</span>(<span class="prop">d</span>));
+}, [<span class="obj">filter</span>]); <span class="cm">// ← Re-runs when filter changes</span></code></pre>
+    </div>
+  </section>
+
+</main>
+
+<button id="back-top" title="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+// Progress bar
+const progress = document.getElementById('progress');
+window.addEventListener('scroll', () => {
+  const scrolled = window.scrollY / (document.body.scrollHeight - window.innerHeight);
+  progress.style.width = (scrolled * 100) + '%';
+  document.getElementById('back-top').classList.toggle('show', window.scrollY > 400);
+});
+
+// Intersection Observer for section animations
+const sections = document.querySelectorAll('.section');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.08 });
+sections.forEach(s => observer.observe(s));
+
+// Active nav highlight
+const navItems = document.querySelectorAll('.nav-item');
+const sectionEls = document.querySelectorAll('section.section');
+
+const navObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if(e.isIntersecting) {
+      navItems.forEach(n => n.classList.remove('active'));
+      const active = document.querySelector(`.nav-item[href="#${e.target.id}"]`);
+      if(active) active.classList.add('active');
+    }
+  });
+}, { threshold: 0.4 });
+sectionEls.forEach(s => navObserver.observe(s));
+
+// Copy button
+function copyCode(btn) {
+  const code = btn.closest('.code-wrapper').querySelector('pre').innerText;
+  navigator.clipboard.writeText(code).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    btn.style.borderColor = 'var(--accent)';
+    btn.style.color = 'var(--accent)';
+    setTimeout(() => { btn.textContent = orig; btn.style.borderColor = ''; btn.style.color = ''; }, 1500);
+  });
+}
+
+// Mobile menu
+const menuToggle = document.getElementById('menuToggle');
+const sidebar = document.getElementById('sidebar');
+menuToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
+document.addEventListener('click', (e) => {
+  if(!sidebar.contains(e.target) && e.target !== menuToggle) {
+    sidebar.classList.remove('open');
+  }
+});
+
+// Search
+const searchInput = document.getElementById('searchInput');
+const allNavItems = document.querySelectorAll('.nav-item');
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value.toLowerCase().trim();
+
+  allNavItems.forEach(item => {
+    const text = item.textContent.toLowerCase();
+    const match = !q || text.includes(q);
+    item.style.display = match ? 'block' : 'none';
+  });
+
+  // Hide section headers if all their items are hidden
+  document.querySelectorAll('.nav-section').forEach(header => {
+    let next = header.nextElementSibling;
+    let hasVisible = false;
+    while (next && !next.classList.contains('nav-section')) {
+      if (next.style.display !== 'none') hasVisible = true;
+      next = next.nextElementSibling;
+    }
+    header.style.display = hasVisible ? 'block' : 'none';
+  });
+
+  // If query cleared, restore all section headers
+  if (!q) {
+    document.querySelectorAll('.nav-section').forEach(h => h.style.display = 'block');
+  }
+});
+</script>
+</body>
+</html>
