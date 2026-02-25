@@ -759,7 +759,8 @@
     <div class="nav-section">Frontend</div>
     <a href="#dom" class="nav-item" data-num="12">DOM Manipulation</a>
     <a href="#css" class="nav-item" data-num="13">CSS — Fundamentals &amp; Layouts</a>
-    <a href="#tailwind" class="nav-item" data-num="13b">Tailwind + Preflight</a>
+    <a href="#breakpoints" class="nav-item" data-num="13b">Breakpoints, Media Queries &amp; Units</a>
+    <a href="#tailwind" class="nav-item" data-num="13c">Tailwind + Preflight</a>
     <div class="nav-section">React</div>
     <a href="#react-core" class="nav-item" data-num="14">Core Concepts</a>
     <a href="#react-state" class="nav-item" data-num="15">State &amp; Mutations</a>
@@ -1394,6 +1395,60 @@ mongoose.<span class="fn">connect</span>(<span class="str">"mongodb+srv://&lt;us
     </div>
 
     <div class="note-box"><strong>// .populate()</strong> replaces the stored ObjectId reference with the actual document data from the referenced collection. The second argument is a space-separated list of fields to include (field projection). For example <span class="ic">"productName price"</span> returns only those two fields from the Product document, not the entire object.</div>
+
+    <div class="divider"></div>
+
+    <h3 style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:12px;letter-spacing:-0.5px;">DB <span style="color:var(--accent3)">Connection Pattern</span></h3>
+    <p class="topic-prose">The correct pattern is to wrap the MongoDB connection in an <strong>async function</strong> with try/catch, and only start the HTTP server <strong>inside</strong> the try block after the DB connects successfully. This ensures your server never starts with a broken database connection.</p>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">JavaScript — connectDB() — Server Entry File</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="kw">import</span> { <span class="fn">connect</span> } <span class="kw">from</span> <span class="str">'mongoose'</span>;
+<span class="kw">import</span> <span class="str">'dotenv/config'</span>;
+<span class="kw">import</span> { <span class="obj">app</span> } <span class="kw">from</span> <span class="str">'./app.js'</span>; <span class="cm">// your express app</span>
+
+<span class="cm">/**
+ * Connects to MongoDB, then starts the HTTP server.
+ * Server only starts AFTER DB connects — prevents serving
+ * requests with no database available.
+ */</span>
+<span class="kw">const</span> <span class="fn">connectDB</span> <span class="op">=</span> <span class="kw">async</span> () <span class="op">=></span> {
+  <span class="kw">try</span> {
+    <span class="kw">await</span> <span class="fn">connect</span>(<span class="obj">process</span>.<span class="prop">env</span>.<span class="prop">DB_URL</span>);
+    console.<span class="fn">log</span>(<span class="str">"DB connection success"</span>);
+
+    <span class="cm">// Start HTTP server only after DB is ready</span>
+    <span class="obj">app</span>.<span class="fn">listen</span>(<span class="obj">process</span>.<span class="prop">env</span>.<span class="prop">PORT</span>, () <span class="op">=></span> console.<span class="fn">log</span>(<span class="str">"server started!"</span>));
+
+  } <span class="kw">catch</span> (<span class="prop">err</span>) {
+    console.<span class="fn">log</span>(<span class="str">"error occurred"</span>, <span class="prop">err</span>.<span class="prop">message</span>);
+    <span class="obj">process</span>.<span class="fn">exit</span>(<span class="num">1</span>); <span class="cm">// Exit process on DB failure — don't hang</span>
+  }
+};
+
+<span class="fn">connectDB</span>(); <span class="cm">// Call it to kick everything off</span></code></pre>
+    </div>
+
+    <div class="note-box"><strong>// Why this pattern?</strong> <span class="ic">app.listen()</span> is inside <span class="ic">try</span> so if <span class="ic">connect()</span> throws, the server never starts. <span class="ic">process.exit(1)</span> in catch kills the process immediately with an error code instead of silently hanging. The <span class="ic">DB_URL</span> and <span class="ic">PORT</span> come from <span class="ic">.env</span> via dotenv.</div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">Shell — .env DB URLs</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="cm"># Local MongoDB (MongoDB installed on your machine)</span>
+DB_URL=mongodb://localhost:27017/dbName
+<span class="cm">#              ↑               ↑      ↑</span>
+<span class="cm">#              host            port   your database name</span>
+
+<span class="cm"># MongoDB Atlas (cloud — production)</span>
+DB_URL=mongodb+srv://&lt;username&gt;:&lt;password&gt;@cluster0.xxxxx.mongodb.net/dbName</code></pre>
+    </div>
   </section>
 
   <!-- ======================== SECTION 11: AUTH ======================== -->
@@ -1433,7 +1488,7 @@ npm install dotenv
       <pre><code><span class="cm"># .env — store secrets here, add .env to .gitignore</span>
 JWT_SECRET=your_super_secret_key_here
 PORT=4000
-MONGO_URI=mongodb+srv://user:pass@cluster.mongodb.net/db</code></pre>
+MONGO_URI=mongodb+srv://user:<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="c9b9a8baba89aaa5bcbabdacbbe7a4a6a7aea6adabe7a7acbd">[email&#160;protected]</a>/db</code></pre>
     </div>
 
     <div class="code-wrapper">
@@ -1825,7 +1880,182 @@ MONGO_URI=mongodb+srv://user:pass@cluster.mongodb.net/db</code></pre>
     <div class="note-box"><strong>// Flex vs Grid:</strong> Use <strong>Flex</strong> when you have a single row/column of items and want them to flow and space themselves. Use <strong>Grid</strong> when you have a two-dimensional layout with both rows and columns to control.</div>
   </section>
 
-  <!-- ======================== SECTION 13b: TAILWIND ======================== -->
+  <!-- ======================== SECTION 13b: BREAKPOINTS ======================== -->
+  <section class="section" id="breakpoints">
+    <div class="section-label">
+      <span class="section-num">13b — Responsive CSS</span>
+      <div class="section-line"></div>
+    </div>
+    <h2 class="section-title">Breakpoints, Media Queries <span class="hl2">&amp; Units</span></h2>
+    <p class="topic-prose">Responsive design means your layout <strong>adapts</strong> to different screen sizes. A breakpoint is a specific screen width at which the design needs to change. When a breakpoint is breached, media queries apply new CSS to re-arrange elements for that viewport.</p>
+
+    <!-- MEDIA QUERIES -->
+    <h3 style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:12px;letter-spacing:-0.5px;">Media <span style="color:var(--accent2)">Queries</span></h3>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">CSS — Media Query Syntax</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="cm">/*  @media  media-type  operator  (media-feature)  { styles }  */</span>
+<span class="cm">/*          ----------  --------  ---------------             */</span>
+<span class="cm">/*          screen      and       max-width: 768px            */</span>
+<span class="cm">/*          print       not       min-width: 480px            */</span>
+<span class="cm">/*          speech      or        orientation: landscape      */</span>
+<span class="cm">/*          all                   prefers-color-scheme: dark  */</span>
+
+<span class="cm">/* screen — for any screen device (phone, tablet, desktop) */</span>
+@<span class="kw">media</span> screen <span class="kw">and</span> (<span class="prop">max-width</span>: <span class="num">768px</span>) {
+  <span class="obj">.container</span> { <span class="prop">flex-direction</span>: column; }
+  <span class="obj">.sidebar</span>   { <span class="prop">display</span>: none; }
+}
+
+<span class="cm">/* print — styles only applied when printing the page */</span>
+@<span class="kw">media</span> print {
+  <span class="obj">.navbar, .ads</span> { <span class="prop">display</span>: none; }
+}
+
+<span class="cm">/* multiple conditions with and */</span>
+@<span class="kw">media</span> screen <span class="kw">and</span> (<span class="prop">min-width</span>: <span class="num">768px</span>) <span class="kw">and</span> (<span class="prop">max-width</span>: <span class="num">1024px</span>) {
+  <span class="cm">/* tablet only */</span>
+}
+
+<span class="cm">/* dark mode media query */</span>
+@<span class="kw">media</span> (<span class="prop">prefers-color-scheme</span>: dark) {
+  <span class="obj">body</span> { <span class="prop">background</span>: <span class="num">#111</span>; <span class="prop">color</span>: <span class="num">#fff</span>; }
+}</code></pre>
+    </div>
+
+    <!-- COMMON BREAKPOINTS -->
+    <h3 style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin:24px 0 12px;letter-spacing:-0.5px;">Common <span style="color:var(--accent4)">Breakpoints</span></h3>
+
+    <div class="method-grid">
+      <div class="method-card">
+        <div class="method-name">Mobile</div>
+        <div class="method-desc">max-width: 480px — phones in portrait. Usually the default since mobile-first is the standard approach.</div>
+        <div class="method-returns">→ &lt; 480px</div>
+      </div>
+      <div class="method-card">
+        <div class="method-name">Tablet</div>
+        <div class="method-desc">481px – 768px — tablets and large phones in landscape. Often switch from single to two column layouts.</div>
+        <div class="method-returns">→ 481px – 768px</div>
+      </div>
+      <div class="method-card">
+        <div class="method-name">Laptop</div>
+        <div class="method-desc">769px – 1024px — small laptops and tablets in landscape. Most complex layouts start here.</div>
+        <div class="method-returns">→ 769px – 1024px</div>
+      </div>
+      <div class="method-card">
+        <div class="method-name">Desktop</div>
+        <div class="method-desc">1025px and above — full desktop layouts with sidebars, multi-column grids, large typography.</div>
+        <div class="method-returns">→ &gt; 1025px</div>
+      </div>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">CSS — Mobile-First Approach (recommended)</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="cm">/* Mobile-First: write base styles for mobile, override upward */</span>
+<span class="cm">/* Use min-width queries — "at this size and ABOVE, apply this" */</span>
+
+<span class="obj">.grid</span> {
+  <span class="prop">display</span>: grid;
+  <span class="prop">grid-template-columns</span>: <span class="num">1fr</span>;     <span class="cm">/* mobile: single column */</span>
+  <span class="prop">gap</span>: <span class="num">16px</span>;
+}
+
+@<span class="kw">media</span> (<span class="prop">min-width</span>: <span class="num">768px</span>) {
+  <span class="obj">.grid</span> { <span class="prop">grid-template-columns</span>: <span class="num">1fr 1fr</span>; }  <span class="cm">/* tablet: 2 col */</span>
+}
+
+@<span class="kw">media</span> (<span class="prop">min-width</span>: <span class="num">1024px</span>) {
+  <span class="obj">.grid</span> { <span class="prop">grid-template-columns</span>: repeat(<span class="num">4</span>, <span class="num">1fr</span>); } <span class="cm">/* desktop: 4 col */</span>
+}
+
+<span class="cm">/* Desktop-First uses max-width (override downward) — less preferred */</span>
+@<span class="kw">media</span> (<span class="prop">max-width</span>: <span class="num">768px</span>) {
+  <span class="obj">.grid</span> { <span class="prop">grid-template-columns</span>: <span class="num">1fr</span>; }
+}</code></pre>
+    </div>
+
+    <div class="note-box"><strong>// Mobile-first vs Desktop-first:</strong> Mobile-first (<span class="ic">min-width</span>) is the recommended approach — design for the smallest screen first, then enhance upward. Desktop-first (<span class="ic">max-width</span>) starts large and overrides downward, which often leads to more complex overrides.</div>
+
+    <div class="divider"></div>
+
+    <!-- UNITS -->
+    <h3 style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:12px;letter-spacing:-0.5px;">CSS <span style="color:var(--accent)">Units</span></h3>
+    <p class="topic-prose">The <strong>root of any HTML document is the <span class="ic">&lt;html&gt;</span> tag</strong>. This matters because <span class="ic">rem</span> is always calculated relative to the font size set on it. Understanding when to use which unit is critical for accessible, responsive designs.</p>
+
+    <div class="card-grid">
+      <div class="card red">
+        <div class="card-title">px — Pixels (avoid for text)</div>
+        <p>Fixed, absolute unit. <strong>Does not scale</strong> when the user changes their browser font size in settings. Using <span class="ic">px</span> for text breaks accessibility — never use it for <span class="ic">font-size</span>.</p>
+        <p style="margin-top:8px;color:var(--muted);">OK for: borders, box-shadow, fine-tuned details</p>
+      </div>
+      <div class="card yellow">
+        <div class="card-title">em — Relative to parent</div>
+        <p><span class="ic">1em</span> = the font-size of the <strong>parent element</strong>. Compounds up the tree — if a parent is <span class="ic">1.2em</span> and a child is <span class="ic">1.2em</span>, the child is actually <span class="ic">1.44×</span> the root. Can cause unexpected sizes in nested elements.</p>
+        <p style="margin-top:8px;color:var(--muted);">Use for: padding/margin that should scale with its own component's font size</p>
+      </div>
+      <div class="card">
+        <div class="card-title">rem — Relative to root ✓</div>
+        <p><span class="ic">1rem</span> = the font-size of the <strong><span class="ic">&lt;html&gt;</span> (root) element</strong>. Defaults to <span class="ic">16px</span> in all browsers. <strong>Does NOT compound.</strong> Adjusts when the user changes their browser font settings. <strong>Use this as your primary unit.</strong></p>
+        <p style="margin-top:8px;color:var(--muted);">Use for: font-size, spacing, layout — almost everything</p>
+      </div>
+      <div class="card blue">
+        <div class="card-title">% — Percentage</div>
+        <p>Relative to the <strong>parent element's width</strong> (for width/padding/margin). Very useful for fluid layouts. <span class="ic">width: 50%</span> = half of whatever the parent is.</p>
+        <p style="margin-top:8px;color:var(--muted);">Use for: fluid widths, responsive containers</p>
+      </div>
+      <div class="card">
+        <div class="card-title">vw / vh — Viewport</div>
+        <p><span class="ic">1vw</span> = 1% of the <strong>viewport width</strong>. <span class="ic">1vh</span> = 1% of the <strong>viewport height</strong>. Independent of any parent — purely based on the current screen size.</p>
+        <p style="margin-top:8px;color:var(--muted);">Use for: full-screen heroes, fixed-height sections, font scaling at large sizes</p>
+      </div>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+        <span class="code-lang">CSS — Units in Practice</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre><code><span class="cm">/* Root font-size — 1rem = 16px by default */</span>
+<span class="cm">/* Trick: set to 62.5% so 1rem = 10px (easy math) */</span>
+<span class="obj">html</span> { <span class="prop">font-size</span>: <span class="num">62.5%</span>; } <span class="cm">/* now 1.6rem = 16px */</span>
+
+<span class="cm">/* ✗ Bad — won't respect browser font size settings */</span>
+<span class="obj">p</span> { <span class="prop">font-size</span>: <span class="num">16px</span>; }
+
+<span class="cm">/* ✓ Good — scales with browser settings */</span>
+<span class="obj">p</span>    { <span class="prop">font-size</span>: <span class="num">1rem</span>; }    <span class="cm">/* 16px by default */</span>
+<span class="obj">h1</span>   { <span class="prop">font-size</span>: <span class="num">2.5rem</span>; }  <span class="cm">/* 40px by default */</span>
+<span class="obj">small</span>{ <span class="prop">font-size</span>: <span class="num">0.875rem</span>;}  <span class="cm">/* 14px by default */</span>
+
+<span class="cm">/* em: scales with parent — good for component-relative spacing */</span>
+<span class="obj">.btn</span> {
+  <span class="prop">font-size</span>: <span class="num">1rem</span>;
+  <span class="prop">padding</span>: <span class="num">0.75em 1.5em</span>; <span class="cm">/* scales with button's own font-size */</span>
+}
+
+<span class="cm">/* % for fluid widths */</span>
+<span class="obj">.container</span> { <span class="prop">width</span>: <span class="num">90%</span>; <span class="prop">max-width</span>: <span class="num">1200px</span>; }
+
+<span class="cm">/* vw/vh for viewport-based sizing */</span>
+<span class="obj">.hero</span>   { <span class="prop">height</span>: <span class="num">100vh</span>; }         <span class="cm">/* full screen height */</span>
+<span class="obj">.banner</span> { <span class="prop">font-size</span>: <span class="num">5vw</span>; }         <span class="cm">/* text scales with screen width */</span></code></pre>
+    </div>
+
+    <div class="warn-box"><strong>⚠ The em compounding trap:</strong> if <span class="ic">.parent</span> has <span class="ic">font-size: 1.2em</span> and <span class="ic">.child</span> inside it also has <span class="ic">font-size: 1.2em</span>, the child ends up at <span class="ic">1.44em</span> of the root — not <span class="ic">1.2em</span>. Use <span class="ic">rem</span> to avoid this cascading effect entirely.</div>
+
+    <div class="note-box"><strong>// Rule of thumb:</strong> Use <strong>rem</strong> for almost everything. Use <strong>em</strong> only when you specifically want something to scale relative to its own component's font-size (like button padding). Use <strong>px</strong> only for fine details like borders and shadows.</div>
+  </section>
+
+  <!-- ======================== SECTION 13c: TAILWIND ======================== -->
   <section class="section" id="tailwind">
     <div class="section-label">
       <span class="section-num">13b — Tailwind CSS</span>
@@ -2256,7 +2486,7 @@ npm install react-hook-form</code></pre>
 
 <button id="back-top" title="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // Progress bar
 const progress = document.getElementById('progress');
 window.addEventListener('scroll', () => {
@@ -2329,7 +2559,7 @@ searchInput.addEventListener('input', () => {
       if (next.style.display !== 'none') hasVisible = true;
       next = next.nextElementSibling;
     }
-    header.style.display = hasVisible ? 'block' : 'none';
+le.display = hasVisible ? 'block' : 'none';
   });
 
   // If query cleared, restore all section headers
