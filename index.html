@@ -4063,12 +4063,56 @@ npm install -D prettier prettier-plugin-tailwindcss
         <h2 class="section-title">
           State <span class="hl2">&amp; Mutations</span>
         </h2>
-        <div class="warn-box">
-          <strong>⚠ Golden Rule:</strong> NEVER mutate state directly. Always
-          create a new copy using spread or array methods that return new
-          arrays. Direct mutation won't trigger a re-render.
-        </div>
+        <div class="card-grid">
+  <div class="card">
+    <div class="card-title">What useState Does</div>
+    <p>
+      <span class="ic">useState</span> is a React Hook that lets you add state to functional components. 
+      It returns an array with two values: the current state and a function to update it.
+    </p>
+  </div>
+  <div class="card blue">
+    <div class="card-title">Why We Need It</div>
+    <p>
+      State allows components to <strong>re-render dynamically</strong> when data changes. 
+      Without state, components would always display static values. 
+      It also <strong>persists values across renders</strong>, unlike local variables which reset each time.
+    </p>
+    <p style="margin-top:8px;">
+      Perfect for handling <strong>user interactions</strong> (form inputs, toggles, counters) and keeping logic 
+      <strong>self-contained</strong> at the component level.
+    </p>
+  </div>
+</div>
 
+<div class="code-wrapper">
+  <div class="code-header">
+    <div class="code-dots">
+      <div class="code-dot dot-r"></div>
+      <div class="code-dot dot-y"></div>
+      <div class="code-dot dot-g"></div>
+    </div>
+    <span class="code-lang">JSX — useState Example</span>
+    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+  </div>
+  <pre><code><span class="cm">// Import useState from React</span>
+import { useState } from "react";
+
+function Counter() {
+  <span class="cm">// Declare state variable 'count' with initial value 0</span>
+  const [count, setCount] = useState(0);
+
+  return (
+    &lt;div&gt;
+      &lt;p&gt;Count: {count}&lt;/p&gt;
+      <span class="cm">// Update state using setCount</span>
+      &lt;button onClick={() =&gt; setCount(count + 1)}&gt;Increment&lt;/button&gt;
+    &lt;/div&gt;
+  );
+}
+</code></pre>
+</div>
+        
         <div class="code-wrapper">
           <div class="code-header">
             <div class="code-dots">
@@ -4092,11 +4136,16 @@ npm install -D prettier prettier-plugin-tailwindcss
 };
 
 <span class="cm">// Object State: spread existing, then override property</span>
-<span class="kw">let</span> [<span class="obj">user</span>, <span class="fn">setUser</span>] <span class="op">=</span> <span class="fn">useState</span>({ <span class="prop">email</span>: <span class="str">"<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="aedacbdddaeec3cfc7c280cdc1c3">[email&#160;protected]</a>"</span> });
+<span class="kw">let</span> [<span class="obj">user</span>, <span class="fn">setUser</span>] <span class="op">=</span> <span class="fn">useState</span>({ <span class="prop">email</span>: <span class="str">"test@gmail.com"</span> });
 
 <span class="kw">const</span> <span class="fn">updateCity</span> <span class="op">=</span> () <span class="op">=></span> {
   <span class="fn">setUser</span>({ ...<span class="obj">user</span>, <span class="prop">city</span>: <span class="str">"hyd"</span> }); <span class="cm">// New object, all old fields kept</span>
 };</code></pre>
+        </div>
+        <div class="warn-box">
+          <strong>⚠ Golden Rule:</strong> NEVER mutate state directly. Always
+          create a new copy using spread or array methods that return new
+          arrays. Direct mutation won't trigger a re-render.
         </div>
       </section>
 
