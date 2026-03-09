@@ -9,13 +9,958 @@
       href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="style.css" />
+    <style>
+      :root {
+        --bg: #0a0a0f;
+        --surface: #111118;
+        --surface2: #16161f;
+        --border: #1e1e2e;
+        --accent: #7cf2c8;
+        --accent2: #f25f7c;
+        --accent3: #7cb4f2;
+        --accent4: #f2c07c;
+        --text: #e2e2f0;
+        --muted: #6b6b8a;
+        --code-bg: #0d0d14;
+        --line: rgba(124, 242, 200, 0.12);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 14px;
+        line-height: 1.7;
+        overflow-x: hidden;
+      }
+
+      /* Scanline overlay */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 2px,
+          rgba(0, 0, 0, 0.04) 2px,
+          rgba(0, 0, 0, 0.04) 4px
+        );
+        pointer-events: none;
+        z-index: 9999;
+      }
+
+      /* Ambient glow */
+      .ambient {
+        position: fixed;
+        border-radius: 50%;
+        filter: blur(120px);
+        opacity: 0.08;
+        pointer-events: none;
+        z-index: 0;
+      }
+      .ambient-1 {
+        width: 600px;
+        height: 600px;
+        background: var(--accent);
+        top: -200px;
+        left: -100px;
+      }
+      .ambient-2 {
+        width: 500px;
+        height: 500px;
+        background: var(--accent2);
+        bottom: -100px;
+        right: -100px;
+      }
+
+      /* ===== SIDEBAR NAV ===== */
+      #sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 260px;
+        height: 100vh;
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        overflow-y: auto;
+        z-index: 100;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.3s ease;
+      }
+
+      #sidebar::-webkit-scrollbar {
+        width: 4px;
+      }
+      #sidebar::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      #sidebar::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 2px;
+      }
+
+      .sidebar-header {
+        padding: 28px 20px 20px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .logo {
+        font-family: "Syne", sans-serif;
+        font-size: 18px;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        color: var(--text);
+      }
+
+      .logo span {
+        color: var(--accent);
+      }
+
+      .logo-sub {
+        font-size: 10px;
+        color: var(--muted);
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-top: 4px;
+      }
+
+      .nav-section {
+        padding: 14px 20px 6px;
+        font-size: 9px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .nav-item {
+        display: block;
+        padding: 8px 20px;
+        color: var(--muted);
+        text-decoration: none;
+        font-size: 12px;
+        transition: all 0.2s;
+        border-left: 2px solid transparent;
+        position: relative;
+      }
+
+      .nav-item::before {
+        content: attr(data-num);
+        font-size: 10px;
+        color: var(--accent);
+        margin-right: 8px;
+        opacity: 0.6;
+      }
+
+      .nav-item:hover,
+      .nav-item.active {
+        color: var(--text);
+        border-left-color: var(--accent);
+        background: rgba(124, 242, 200, 0.04);
+        padding-left: 22px;
+      }
+
+      .sidebar-footer {
+        margin-top: auto;
+        padding: 16px 20px;
+        border-top: 1px solid var(--border);
+        font-size: 10px;
+        color: var(--muted);
+      }
+
+      /* ===== MAIN CONTENT ===== */
+      #main {
+        margin-left: 260px;
+        min-height: 100vh;
+        position: relative;
+        z-index: 1;
+      }
+
+      /* ===== HERO ===== */
+      .hero {
+        padding: 80px 60px 60px;
+        border-bottom: 1px solid var(--border);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .hero::after {
+        content: "01";
+        position: absolute;
+        right: 60px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-family: "Syne", sans-serif;
+        font-size: 180px;
+        font-weight: 800;
+        color: rgba(124, 242, 200, 0.04);
+        line-height: 1;
+        pointer-events: none;
+        user-select: none;
+      }
+
+      .hero-eyebrow {
+        font-size: 10px;
+        letter-spacing: 4px;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 16px;
+      }
+
+      .hero-title {
+        font-family: "Syne", sans-serif;
+        font-size: 52px;
+        font-weight: 800;
+        line-height: 1.05;
+        letter-spacing: -2px;
+        margin-bottom: 20px;
+      }
+
+      .hero-title span {
+        color: var(--accent);
+      }
+
+      .hero-desc {
+        max-width: 520px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.8;
+      }
+
+      .hero-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 24px;
+      }
+
+      .tag {
+        padding: 4px 12px;
+        border: 1px solid var(--border);
+        border-radius: 2px;
+        font-size: 10px;
+        letter-spacing: 1px;
+        color: var(--muted);
+        text-transform: uppercase;
+      }
+
+      .tag.accent {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      .tag.red {
+        border-color: var(--accent2);
+        color: var(--accent2);
+      }
+      .tag.blue {
+        border-color: var(--accent3);
+        color: var(--accent3);
+      }
+      .tag.yellow {
+        border-color: var(--accent4);
+        color: var(--accent4);
+      }
+
+      /* ===== SECTIONS ===== */
+      .section {
+        padding: 56px 60px;
+        border-bottom: 1px solid var(--border);
+        opacity: 0;
+        transform: translateY(24px);
+        transition:
+          opacity 0.5s ease,
+          transform 0.5s ease;
+      }
+
+      .section.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .section-label {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 32px;
+      }
+
+      .section-num {
+        font-family: "Syne", sans-serif;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 3px;
+        color: var(--accent);
+        text-transform: uppercase;
+      }
+
+      .section-line {
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+      }
+
+      .section-title {
+        font-family: "Syne", sans-serif;
+        font-size: 30px;
+        font-weight: 800;
+        letter-spacing: -1px;
+        margin-bottom: 28px;
+        line-height: 1.2;
+      }
+
+      .section-title .hl {
+        color: var(--accent);
+      }
+      .section-title .hl2 {
+        color: var(--accent2);
+      }
+      .section-title .hl3 {
+        color: var(--accent3);
+      }
+      .section-title .hl4 {
+        color: var(--accent4);
+      }
+
+      /* ===== CONCEPT CARDS ===== */
+      .card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 16px;
+        margin-bottom: 28px;
+      }
+
+      .card {
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        padding: 20px;
+        border-radius: 4px;
+        position: relative;
+        overflow: hidden;
+        transition:
+          border-color 0.2s,
+          transform 0.2s;
+      }
+
+      .card:hover {
+        border-color: rgba(124, 242, 200, 0.3);
+        transform: translateY(-2px);
+      }
+
+      .card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 3px;
+        height: 100%;
+        background: var(--accent);
+      }
+
+      .card.red::before {
+        background: var(--accent2);
+      }
+      .card.blue::before {
+        background: var(--accent3);
+      }
+      .card.yellow::before {
+        background: var(--accent4);
+      }
+
+      .card-title {
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 10px;
+      }
+
+      .card.red .card-title {
+        color: var(--accent2);
+      }
+      .card.blue .card-title {
+        color: var(--accent3);
+      }
+      .card.yellow .card-title {
+        color: var(--accent4);
+      }
+
+      .card p {
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+      .card strong {
+        color: var(--text);
+      }
+
+      /* ===== METHOD CARDS ===== */
+      .method-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 12px;
+        margin-bottom: 24px;
+      }
+
+      .method-card {
+        background: var(--code-bg);
+        border: 1px solid var(--border);
+        padding: 16px;
+        border-radius: 4px;
+        transition: border-color 0.2s;
+      }
+
+      .method-card:hover {
+        border-color: rgba(124, 242, 200, 0.25);
+      }
+
+      .method-name {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--accent3);
+        margin-bottom: 6px;
+      }
+
+      .method-desc {
+        font-size: 11px;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+      .method-returns {
+        font-size: 10px;
+        color: var(--accent4);
+        margin-top: 6px;
+      }
+
+      /* ===== CODE BLOCKS ===== */
+      .code-wrapper {
+        margin: 20px 0;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        overflow: hidden;
+      }
+
+      .code-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 16px;
+        background: var(--surface2);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .code-dots {
+        display: flex;
+        gap: 6px;
+      }
+      .code-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+      }
+      .dot-r {
+        background: #f25f5c;
+      }
+      .dot-y {
+        background: #f2c07c;
+      }
+      .dot-g {
+        background: #7cf2c8;
+      }
+
+      .code-lang {
+        font-size: 10px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .copy-btn {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--muted);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 10px;
+        padding: 4px 10px;
+        cursor: pointer;
+        border-radius: 2px;
+        transition: all 0.2s;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+      }
+
+      .copy-btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      pre {
+        background: var(--code-bg);
+        padding: 20px;
+        overflow-x: auto;
+        font-size: 12.5px;
+        line-height: 1.8;
+      }
+
+      pre::-webkit-scrollbar {
+        height: 4px;
+      }
+      pre::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      pre::-webkit-scrollbar-thumb {
+        background: var(--border);
+      }
+
+      code {
+        font-family: "JetBrains Mono", monospace;
+      }
+
+      /* Syntax highlighting */
+      .kw {
+        color: #c792ea;
+      }
+      .fn {
+        color: var(--accent3);
+      }
+      .str {
+        color: #c3e88d;
+      }
+      .num {
+        color: var(--accent4);
+      }
+      .cm {
+        color: var(--muted);
+        font-style: italic;
+      }
+      .op {
+        color: var(--accent2);
+      }
+      .obj {
+        color: var(--accent);
+      }
+      .prop {
+        color: #f07178;
+      }
+
+      /* ===== OPERATORS TABLE ===== */
+      .op-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+        font-size: 12px;
+      }
+
+      .op-table th {
+        text-align: left;
+        padding: 10px 16px;
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        font-size: 10px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .op-table td {
+        padding: 12px 16px;
+        border: 1px solid var(--border);
+        vertical-align: top;
+      }
+
+      .op-table tr:hover td {
+        background: rgba(124, 242, 200, 0.02);
+      }
+
+      .op-name {
+        color: var(--accent4);
+        font-weight: 700;
+        font-size: 13px;
+      }
+      .op-syntax {
+        color: var(--accent2);
+        font-size: 12px;
+      }
+      .op-desc {
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.6;
+      }
+
+      /* ===== STATUS CODES ===== */
+      .status-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 10px;
+        margin: 20px 0;
+      }
+
+      .status-card {
+        padding: 14px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        background: var(--code-bg);
+        text-align: center;
+      }
+
+      .status-num {
+        font-family: "Syne", sans-serif;
+        font-size: 26px;
+        font-weight: 800;
+        margin-bottom: 4px;
+      }
+
+      .s2xx {
+        color: var(--accent);
+      }
+      .s4xx {
+        color: var(--accent4);
+      }
+      .s5xx {
+        color: var(--accent2);
+      }
+
+      .status-label {
+        font-size: 10px;
+        letter-spacing: 1px;
+        color: var(--muted);
+        text-transform: uppercase;
+      }
+
+      /* ===== PROMISE FLOW ===== */
+      .flow {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        margin: 24px 0;
+        flex-wrap: wrap;
+      }
+
+      .flow-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .flow-box {
+        padding: 10px 20px;
+        border: 1px solid var(--border);
+        background: var(--surface2);
+        font-size: 11px;
+        text-align: center;
+        min-width: 100px;
+        border-radius: 3px;
+        letter-spacing: 0.5px;
+      }
+
+      .flow-label {
+        font-size: 9px;
+        color: var(--muted);
+        letter-spacing: 1px;
+        text-transform: uppercase;
+      }
+
+      .flow-box.pending {
+        border-color: var(--muted);
+        color: var(--muted);
+      }
+      .flow-box.fulfilled {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      .flow-box.rejected {
+        border-color: var(--accent2);
+        color: var(--accent2);
+      }
+
+      .flow-arrow {
+        width: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--muted);
+        font-size: 16px;
+        padding-bottom: 18px;
+      }
+
+      /* ===== HOOK CARDS ===== */
+      .hook-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 14px;
+        margin: 20px 0;
+      }
+
+      .hook-card {
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        overflow: hidden;
+        transition: border-color 0.2s;
+      }
+
+      .hook-card:hover {
+        border-color: rgba(124, 242, 200, 0.3);
+      }
+
+      .hook-head {
+        padding: 12px 16px;
+        background: var(--surface2);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .hook-icon {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--accent);
+        flex-shrink: 0;
+      }
+
+      .hook-icon.red {
+        background: var(--accent2);
+      }
+      .hook-icon.blue {
+        background: var(--accent3);
+      }
+
+      .hook-name {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text);
+      }
+
+      .hook-body {
+        padding: 14px 16px;
+      }
+      .hook-body p {
+        font-size: 11px;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+      .hook-body strong {
+        color: var(--text);
+      }
+
+      /* ===== INLINE CODE ===== */
+      .ic {
+        background: var(--code-bg);
+        border: 1px solid var(--border);
+        padding: 1px 6px;
+        border-radius: 3px;
+        font-size: 11px;
+        color: var(--accent3);
+      }
+
+      /* ===== DIVIDER ===== */
+      .divider {
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          var(--border),
+          transparent
+        );
+        margin: 24px 0;
+      }
+
+      /* ===== PROGRESS BAR ===== */
+      .progress-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 2px;
+        background: var(--accent);
+        z-index: 9999;
+        transition: width 0.1s;
+        box-shadow: 0 0 10px var(--accent);
+      }
+
+      /* ===== HAMBURGER ===== */
+      .menu-toggle {
+        display: none;
+        position: fixed;
+        top: 16px;
+        left: 16px;
+        z-index: 200;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        color: var(--text);
+        padding: 8px 12px;
+        cursor: pointer;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12px;
+        border-radius: 3px;
+      }
+
+      /* ===== BACK TO TOP ===== */
+      #back-top {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        color: var(--muted);
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 16px;
+        border-radius: 3px;
+        transition: all 0.2s;
+        opacity: 0;
+        pointer-events: none;
+        z-index: 100;
+      }
+
+      #back-top.show {
+        opacity: 1;
+        pointer-events: all;
+      }
+      #back-top:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      /* ===== SEARCH BAR ===== */
+      .search-wrap {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .search-input {
+        width: 100%;
+        background: var(--code-bg);
+        border: 1px solid var(--border);
+        color: var(--text);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        padding: 8px 12px;
+        border-radius: 3px;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+
+      .search-input::placeholder {
+        color: var(--muted);
+      }
+      .search-input:focus {
+        border-color: var(--accent);
+      }
+
+      /* ===== RESPONSIVE ===== */
+      @media (max-width: 900px) {
+        #sidebar {
+          transform: translateX(-100%);
+        }
+        #sidebar.open {
+          transform: translateX(0);
+        }
+        #main {
+          margin-left: 0;
+        }
+        .menu-toggle {
+          display: flex;
+        }
+        .hero {
+          padding: 72px 24px 40px;
+        }
+        .hero::after {
+          display: none;
+        }
+        .hero-title {
+          font-size: 32px;
+        }
+        .section {
+          padding: 40px 24px;
+        }
+      }
+
+      /* Tooltip */
+      [data-tooltip] {
+        position: relative;
+        cursor: help;
+      }
+      [data-tooltip]:hover::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: calc(100% + 6px);
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        padding: 4px 10px;
+        font-size: 10px;
+        white-space: nowrap;
+        border-radius: 3px;
+        color: var(--text);
+        z-index: 100;
+      }
+
+      .note-box {
+        border: 1px solid rgba(124, 242, 200, 0.2);
+        background: rgba(124, 242, 200, 0.04);
+        border-left: 3px solid var(--accent);
+        padding: 14px 16px;
+        margin: 16px 0;
+        font-size: 12px;
+        color: var(--muted);
+        border-radius: 0 4px 4px 0;
+      }
+
+      .note-box strong {
+        color: var(--accent);
+      }
+
+      .warn-box {
+        border: 1px solid rgba(242, 95, 124, 0.2);
+        background: rgba(242, 95, 124, 0.04);
+        border-left: 3px solid var(--accent2);
+        padding: 14px 16px;
+        margin: 16px 0;
+        font-size: 12px;
+        color: var(--muted);
+        border-radius: 0 4px 4px 0;
+      }
+
+      .warn-box strong {
+        color: var(--accent2);
+      }
+
+      .topic-prose {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.8;
+        margin-bottom: 20px;
+      }
+      .topic-prose strong {
+        color: var(--text);
+      }
+    </style>
   </head>
   <body>
     <div class="progress-bar" id="progress"></div>
     <div class="ambient ambient-1"></div>
     <div class="ambient ambient-2"></div>
+
     <button class="menu-toggle" id="menuToggle">☰ Menu</button>
+
     <!-- SIDEBAR -->
     <nav id="sidebar">
       <div class="sidebar-header">
@@ -48,6 +993,9 @@
         <a href="#dates" class="nav-item" data-num="05">Dates</a>
         <a href="#modules" class="nav-item" data-num="06"
           >Modules &amp; Exports</a
+        >
+        <a href="#functions-closure" class="nav-item" data-num="06b"
+          >Functions &amp; Closure</a
         >
         <div class="nav-section">Async JS</div>
         <a href="#async" class="nav-item" data-num="07"
@@ -459,6 +1407,88 @@ console.<span class="fn">log</span>(<span class="obj">student</span>.<span class
 <span class="cm">// sort: Spread first to avoid mutating original</span>
 <span class="kw">let</span> <span class="obj">sortPrices</span> <span class="op">=</span> [...<span class="obj">courses</span>].<span class="fn">sort</span>((<span class="prop">a</span>, <span class="prop">b</span>) <span class="op">=></span> <span class="prop">b</span>.<span class="prop">price</span> <span class="op">-</span> <span class="prop">a</span>.<span class="prop">price</span>);</code></pre>
         </div>
+        <div class="divider"></div>
+
+        <h3
+          style="
+            font-family: &quot;Syne&quot;, sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+          "
+        >
+          Rest <span style="color: var(--accent2)">Parameters</span>
+        </h3>
+        <p class="topic-prose">
+          In most other languages, passing more arguments than a function
+          expects causes an error. In JS it silently ignores the extras.
+          <strong>Rest parameters</strong> let you capture all those extra
+          arguments into a single array so nothing is lost.
+        </p>
+
+        <div class="card-grid">
+          <div class="card yellow">
+            <div class="card-title">Without Rest — Extras Ignored</div>
+            <p>
+              <span class="ic">function sum(a, b)</span> called with
+              <span class="ic">sum(10, 20, 30, 40)</span> — JS takes only
+              <span class="ic">a=10, b=20</span> and silently discards 30 and
+              40. No error, just unexpected results.
+            </p>
+          </div>
+          <div class="card">
+            <div class="card-title">With Rest — Pack Into Array</div>
+            <p>
+              <span class="ic">function sum(...a)</span> — the
+              <span class="ic">...</span> packs ALL passed arguments into an
+              array. Now you can loop over them, reduce them, or pass them
+              elsewhere. Works with any number of arguments.
+            </p>
+          </div>
+          <div class="card red">
+            <div class="card-title">⚠ Rule: Rest Must Be Last</div>
+            <p>
+              The rest parameter must always be the
+              <strong>last parameter</strong>. You can have normal params before
+              it: <span class="ic">function fn(a, b, ...rest)</span>. Putting
+              anything after the rest param is a syntax error.
+            </p>
+          </div>
+        </div>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <div class="code-dots">
+              <div class="code-dot dot-r"></div>
+              <div class="code-dot dot-y"></div>
+              <div class="code-dot dot-g"></div>
+            </div>
+            <span class="code-lang">JavaScript — Rest Parameters</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><code><span class="cm">// Without rest — extras are silently ignored</span>
+<span class="kw">function</span> <span class="fn">sum</span>(<span class="prop">a</span>, <span class="prop">b</span>) {
+  <span class="kw">return</span> <span class="prop">a</span> <span class="op">+</span> <span class="prop">b</span>;
+}
+<span class="fn">sum</span>(<span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>, <span class="num">40</span>); <span class="cm">// returns 30 — 30 and 40 are ignored</span>
+
+<span class="cm">// With rest — all arguments packed into array 'a'</span>
+<span class="kw">function</span> <span class="fn">sum</span>(...<span class="prop">a</span>) {
+  console.<span class="fn">log</span>(<span class="prop">a</span>); <span class="cm">// [10, 20, 30, 40]</span>
+  <span class="kw">return</span> <span class="prop">a</span>.<span class="fn">reduce</span>((<span class="prop">x</span>, <span class="prop">y</span>) <span class="op">=></span> <span class="prop">x</span> <span class="op">+</span> <span class="prop">y</span>);
+}
+<span class="fn">sum</span>(<span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>, <span class="num">40</span>); <span class="cm">// returns 100 ✓</span>
+
+<span class="cm">// Mix of fixed + rest params — rest must be LAST</span>
+<span class="kw">function</span> <span class="fn">log</span>(<span class="prop">label</span>, ...<span class="prop">values</span>) {
+  console.<span class="fn">log</span>(<span class="prop">label</span>, <span class="prop">values</span>);
+}
+<span class="fn">log</span>(<span class="str">"scores:"</span>, <span class="num">90</span>, <span class="num">85</span>, <span class="num">78</span>); <span class="cm">// "scores:" [90, 85, 78]</span>
+
+<span class="cm">// ✗ Syntax Error — rest param must be last</span>
+<span class="cm">// function bad(...a, b) { } </span></code></pre>
+        </div>
       </section>
 
       <!-- ======================== SECTION 5: DATES ======================== -->
@@ -547,6 +1577,135 @@ console.<span class="fn">log</span>(<span class="obj">date</span>.<span class="f
               >
             </p>
           </div>
+        </div>
+      </section>
+      <!-- ======================== SECTION 6b: FUNCTIONS & CLOSURE ======================== -->
+      <section class="section" id="functions-closure">
+        <div class="section-label">
+          <span class="section-num">06b — Functions</span>
+          <div class="section-line"></div>
+        </div>
+        <h2 class="section-title">
+          First-Class Functions <span class="hl4">&amp; Closure</span>
+        </h2>
+        <p class="topic-prose">
+          In JavaScript, <strong>functions are first-class objects</strong> —
+          they can be stored in variables, passed as arguments, and returned
+          from other functions. This is why JS supports both OOP and functional
+          programming styles.
+        </p>
+
+        <div class="card-grid">
+          <div class="card">
+            <div class="card-title">Stored in a Variable</div>
+            <p>
+              Called a <strong>function expression</strong>. The function has no
+              name of its own — it's called an
+              <strong>anonymous function</strong>. The variable holds a
+              reference to it.
+            </p>
+            <p style="margin-top: 8px">
+              <span class="ic">const greet = function() { ... }</span>
+            </p>
+          </div>
+          <div class="card blue">
+            <div class="card-title">Passed as an Argument</div>
+            <p>
+              Called a <strong>callback function</strong>. You pass the function
+              itself (not its result) to another function, which calls it later.
+              This is the backbone of async JS and array methods like
+              <span class="ic">.map()</span>, <span class="ic">.filter()</span>.
+            </p>
+          </div>
+          <div class="card yellow">
+            <div class="card-title">Returned from a Function</div>
+            <p>
+              A function that returns another function. Less common but powerful
+              — used in factory functions, memoization, and closures. This is
+              where closure kicks in.
+            </p>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <h3
+          style="
+            font-family: &quot;Syne&quot;, sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+          "
+        >
+          How <span style="color: var(--accent)">Closure</span> Works
+        </h3>
+        <p class="topic-prose">
+          A closure is a
+          <strong>function bundled together with its surrounding scope</strong>.
+          This is the default behaviour in JS — every function "remembers" the
+          variables from the scope it was defined in, even after that outer
+          function has finished executing.
+        </p>
+
+        <div class="card-grid">
+          <div class="card red">
+            <div class="card-title">Normal Execution (no closure)</div>
+            <p>
+              When a function runs, its local variables are created in the
+              <strong>Call Stack</strong>. When the function finishes, those
+              variables are removed from the stack. Gone.
+            </p>
+          </div>
+          <div class="card">
+            <div class="card-title">With Closure (inner function)</div>
+            <p>
+              If the function <strong>returns another function</strong>, the
+              inner function still holds a reference to the outer variables. The
+              JS engine sees this and moves those variables to the
+              <strong>Heap</strong> (where reference types live) instead of
+              deleting them — keeping them alive as long as the inner function
+              exists.
+            </p>
+          </div>
+        </div>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <div class="code-dots">
+              <div class="code-dot dot-r"></div>
+              <div class="code-dot dot-y"></div>
+              <div class="code-dot dot-g"></div>
+            </div>
+            <span class="code-lang">JavaScript — Closure Example</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><code><span class="kw">function</span> <span class="fn">increment</span>() {
+  <span class="kw">let</span> <span class="obj">counter</span> <span class="op">=</span> <span class="num">0</span>;          <span class="cm">// local to increment()</span>
+  <span class="kw">return function</span>() {       <span class="cm">// inner function "closes over" counter</span>
+    <span class="obj">counter</span><span class="op">++</span>;
+    <span class="kw">return</span> <span class="obj">counter</span>;
+  };
+}
+
+<span class="kw">let</span> <span class="obj">x</span> <span class="op">=</span> <span class="fn">increment</span>(); <span class="cm">// increment() runs and finishes...</span>
+                      <span class="cm">// but counter is NOT deleted — x holds a reference to the inner fn</span>
+
+console.<span class="fn">log</span>(<span class="obj">x</span>()); <span class="cm">// 1 — counter is remembered</span>
+console.<span class="fn">log</span>(<span class="obj">x</span>()); <span class="cm">// 2 — same counter, still alive in memory</span>
+console.<span class="fn">log</span>(<span class="obj">x</span>()); <span class="cm">// 3</span>
+
+<span class="cm">// Each call to increment() creates a SEPARATE closure</span>
+<span class="kw">let</span> <span class="obj">y</span> <span class="op">=</span> <span class="fn">increment</span>();
+console.<span class="fn">log</span>(<span class="obj">y</span>()); <span class="cm">// 1 — y has its own private counter, separate from x</span></code></pre>
+        </div>
+
+        <div class="note-box">
+          <strong>// Memory model:</strong> Stack = fast, temporary storage for
+          function calls and primitives. Heap = slower, long-term storage for
+          objects and references. When a closure is formed, the closed-over
+          variables are moved from the stack to the heap so they survive after
+          the outer function returns.
         </div>
       </section>
 
@@ -848,6 +2007,163 @@ npm install express cookie-parser
 
 <span class="obj">app</span>.<span class="fn">listen</span>(<span class="num">4000</span>, () <span class="op">=></span> console.<span class="fn">log</span>(<span class="str">"listening to port 4000"</span>));</code></pre>
         </div>
+
+        <div class="divider"></div>
+
+        <h3
+          style="
+            font-family: &quot;Syne&quot;, sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+          "
+        >
+          Controllers
+          <span style="color: var(--accent3)">&amp; Route Files</span>
+        </h3>
+        <p class="topic-prose">
+          A <strong>Controller</strong> is just a request handler function
+          stored in a variable instead of being written inline on the route. It
+          keeps route files clean — the route just says what path + method, and
+          the controller says what to do.
+        </p>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <div class="code-dots">
+              <div class="code-dot dot-r"></div>
+              <div class="code-dot dot-y"></div>
+              <div class="code-dot dot-g"></div>
+            </div>
+            <span class="code-lang"
+              >JavaScript — Inline vs Controller Pattern</span
+            >
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><code><span class="cm">// ✗ Before — handler written inline, gets messy fast</span>
+<span class="obj">app</span>.<span class="fn">get</span>(<span class="str">'/users'</span>, (<span class="prop">req</span>, <span class="prop">res</span>) <span class="op">=></span> {
+  <span class="cm">// all the logic crammed here</span>
+});
+
+<span class="cm">// ✓ After — extract to a controller variable</span>
+<span class="kw">const</span> <span class="fn">getUsers</span> <span class="op">=</span> (<span class="prop">req</span>, <span class="prop">res</span>) <span class="op">=></span> {
+  <span class="cm">// logic lives here, named and reusable</span>
+};
+<span class="obj">app</span>.<span class="fn">get</span>(<span class="str">'/users'</span>, <span class="fn">getUsers</span>); <span class="cm">// route is now clean and readable</span>
+
+<span class="cm">// In larger apps, controllers go in separate files:</span>
+<span class="cm">// userController.js  →  exports { getUsers, createUser, deleteUser }</span>
+<span class="cm">// userRoutes.js      →  imports controllers, defines app.get/post/delete</span>
+<span class="cm">// app.js             →  imports routes, mounts them with app.use()</span></code></pre>
+        </div>
+
+        <div class="note-box">
+          <strong>// File naming convention:</strong> In many Express projects
+          you'll see a file called <span class="ic">app.routes.js</span> — the
+          name tells you the file (<span class="ic">app</span>), what it does
+          (<span class="ic">routes</span>), and the extension (<span class="ic"
+            >.js</span
+          >). Controllers typically live in a separate
+          <span class="ic">controllers/</span> folder.
+        </div>
+
+        <div class="divider"></div>
+
+        <h3
+          style="
+            font-family: &quot;Syne&quot;, sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+          "
+        >
+          <span style="color: var(--accent2)">CORS</span> — Cross-Origin
+          Resource Sharing
+        </h3>
+        <p class="topic-prose">
+          By default, browsers block frontend JS from making requests to a
+          <strong>different origin</strong> (different domain, port, or
+          protocol). This is the browser's Same-Origin Policy. CORS is the
+          mechanism that lets a server say
+          <em>"I allow requests from this origin"</em> — without it, your React
+          frontend on <span class="ic">localhost:5173</span> can't talk to your
+          Express backend on <span class="ic">localhost:4000</span>.
+        </p>
+
+        <div class="card-grid">
+          <div class="card red">
+            <div class="card-title">What Triggers CORS Error</div>
+            <p>
+              Your React app (origin A) makes a fetch/axios request to your
+              Express server (origin B). Browser sees different origins → blocks
+              the response and throws a CORS error in the console. The request
+              DID reach the server — the browser just refuses to hand the
+              response to JS.
+            </p>
+          </div>
+          <div class="card">
+            <div class="card-title">The Fix</div>
+            <p>
+              Install the <span class="ic">cors</span> npm package and use it as
+              Express middleware. It adds the right headers (<span class="ic"
+                >Access-Control-Allow-Origin</span
+              >) to every response so the browser allows them through.
+            </p>
+          </div>
+          <div class="card blue">
+            <div class="card-title">origin: true vs "*"</div>
+            <p>
+              <span class="ic">origin: "*"</span> allows every domain — fine for
+              public APIs. <span class="ic">origin: true</span> mirrors the
+              request origin back, allowing any origin with cookies. For
+              production, pass a specific URL:
+              <span class="ic">origin: "https://yoursite.com"</span>.
+            </p>
+          </div>
+        </div>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <div class="code-dots">
+              <div class="code-dot dot-r"></div>
+              <div class="code-dot dot-y"></div>
+              <div class="code-dot dot-g"></div>
+            </div>
+            <span class="code-lang">Shell + JavaScript — CORS Setup</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><code><span class="cm"># Install cors package</span>
+npm install cors
+
+<span class="cm">// app.js — import and use BEFORE your routes</span>
+<span class="kw">import</span> cors <span class="kw">from</span> <span class="str">'cors'</span>;
+<span class="kw">import</span> exp <span class="kw">from</span> <span class="str">'express'</span>;
+
+<span class="kw">const</span> <span class="obj">app</span> <span class="op">=</span> <span class="fn">exp</span>();
+
+<span class="obj">app</span>.<span class="fn">use</span>(<span class="fn">cors</span>({
+  <span class="prop">origin</span>: <span class="kw">true</span>,        <span class="cm">// allow the requesting origin (any)</span>
+  <span class="prop">credentials</span>: <span class="kw">true</span>,  <span class="cm">// allow cookies to be sent (needed for httpOnly JWT cookies)</span>
+}));
+
+<span class="cm">// For specific origin only (recommended in production):</span>
+<span class="cm">// app.use(cors({ origin: "http://localhost:5173", credentials: true }));</span>
+
+<span class="obj">app</span>.<span class="fn">use</span>(<span class="obj">exp</span>.<span class="fn">json</span>());
+<span class="cm">// ... rest of your middlewares and routes</span></code></pre>
+        </div>
+
+        <div class="warn-box">
+          <strong>⚠ credentials: true is required</strong> when your frontend
+          sends cookies (like your JWT httpOnly cookie). Without it, the browser
+          strips cookies from cross-origin requests even if CORS is otherwise
+          set up correctly. Always pair it with a specific
+          <span class="ic">origin</span> —
+          <span class="ic">credentials: true</span> with
+          <span class="ic">origin: "*"</span> is not allowed by browsers.
+        </div>
       </section>
 
       <!-- ======================== SECTION 10: MONGODB ======================== -->
@@ -1036,6 +2352,250 @@ mongoose.<span class="fn">connect</span>(<span class="str">"mongodb+srv://&lt;us
         </div>
 
         <div class="divider"></div>
+        <!-- ===== NEW: MONGOOSE QUERY METHODS ===== -->
+        <div class="section-label" style="margin-bottom: 20px">
+          <span class="section-num">10b — Query Methods</span>
+          <div class="section-line"></div>
+        </div>
+        <h2 class="section-title" style="font-size: 24px">
+          Mongoose <span class="hl3">Query Methods</span>
+        </h2>
+        <p class="topic-prose">
+          These are the core Mongoose methods for reading and updating
+          documents. Understanding what each method <strong>accepts</strong>,
+          <strong>returns</strong>, and how options like
+          <span class="ic">new: true</span> change the behaviour is essential —
+          both in real projects and interviews.
+        </p>
+
+        <table class="op-table">
+          <thead>
+            <tr>
+              <th>Method</th>
+              <th>What it does</th>
+              <th>Arguments</th>
+              <th>Returns</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="op-name">find()</span></td>
+              <td class="op-desc">
+                Returns <strong>all documents</strong> that match the filter. If
+                no filter passed, returns the entire collection.
+              </td>
+              <td class="op-desc">
+                <span class="ic">filter</span> (optional),
+                <span class="ic">projection</span> (optional)
+              </td>
+              <td class="op-desc" style="color: var(--accent)">
+                Array of documents — <strong>empty array</strong> if none match,
+                never null
+              </td>
+            </tr>
+            <tr>
+              <td><span class="op-name">findOne()</span></td>
+              <td class="op-desc">
+                Returns the <strong>first document</strong> that matches the
+                filter. Stops scanning after the first match — more efficient
+                than find() when you only need one.
+              </td>
+              <td class="op-desc">
+                <span class="ic">filter</span>,
+                <span class="ic">projection</span> (optional)
+              </td>
+              <td class="op-desc" style="color: var(--accent)">
+                Single document | <span class="ic">null</span> if not found
+              </td>
+            </tr>
+            <tr>
+              <td><span class="op-name">findById()</span></td>
+              <td class="op-desc">
+                Shorthand for
+                <span class="ic">findOne(&#123; _id: id &#125;)</span>. Looks up
+                a document by its <span class="ic">_id</span> field directly.
+                Accepts string or ObjectId.
+              </td>
+              <td class="op-desc">
+                <span class="ic">id</span> (string or ObjectId)
+              </td>
+              <td class="op-desc" style="color: var(--accent)">
+                Single document | <span class="ic">null</span> if not found
+              </td>
+            </tr>
+            <tr>
+              <td><span class="op-name">findOneAndUpdate()</span></td>
+              <td class="op-desc">
+                Finds the <strong>first matching document</strong> and applies
+                the update. By default returns the
+                <strong>old (pre-update)</strong> document. Pass
+                <span class="ic">&#123; new: true &#125;</span> to get the
+                updated version back.
+              </td>
+              <td class="op-desc">
+                <span class="ic">filter</span>, <span class="ic">update</span>,
+                <span class="ic">options</span>
+              </td>
+              <td class="op-desc" style="color: var(--accent)">
+                Old doc by default | New doc with
+                <span class="ic">new: true</span> |
+                <span class="ic">null</span> if no match
+              </td>
+            </tr>
+            <tr>
+              <td><span class="op-name">findByIdAndUpdate()</span></td>
+              <td class="op-desc">
+                Shorthand for
+                <span class="ic"
+                  >findOneAndUpdate(&#123; _id: id &#125;, ...)</span
+                >. Same exact behaviour — returns old document by default, new
+                document with <span class="ic">&#123; new: true &#125;</span>.
+              </td>
+              <td class="op-desc">
+                <span class="ic">id</span>, <span class="ic">update</span>,
+                <span class="ic">options</span>
+              </td>
+              <td class="op-desc" style="color: var(--accent)">
+                Old doc by default | New doc with
+                <span class="ic">new: true</span> |
+                <span class="ic">null</span> if not found
+              </td>
+            </tr>
+            <tr>
+              <td><span class="op-name">findByIdAndDelete()</span></td>
+              <td class="op-desc">
+                Finds a document by <span class="ic">_id</span>,
+                <strong>removes it</strong> from the collection entirely, and
+                returns it — useful to confirm what was deleted.
+              </td>
+              <td class="op-desc"><span class="ic">id</span></td>
+              <td class="op-desc" style="color: var(--accent)">
+                The deleted document | <span class="ic">null</span> if not found
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="warn-box">
+          <strong>⚠ new: false is the default</strong> —
+          <span class="ic">findByIdAndUpdate()</span> and
+          <span class="ic">findOneAndUpdate()</span> return the document
+          <strong>before the update was applied</strong> unless you pass
+          <span class="ic">&#123; new: true &#125;</span>. This trips up almost
+          everyone the first time. Always explicitly pass
+          <span class="ic">new: true</span> when you need the updated result.
+        </div>
+
+        <div class="card-grid" style="margin-bottom: 20px">
+          <div class="card blue">
+            <div class="card-title">find() vs findOne()</div>
+            <p>
+              <span class="ic">find()</span> always returns an
+              <strong>array</strong> — even if only one document matches, you
+              get a one-element array. <span class="ic">findOne()</span> always
+              returns a <strong>single document or null</strong>. Use
+              <span class="ic">findOne()</span> when you expect exactly one
+              result (by email, username, slug, etc.).
+            </p>
+          </div>
+          <div class="card yellow">
+            <div class="card-title">upsert: true</div>
+            <p>
+              Pass <span class="ic">&#123; upsert: true &#125;</span> to
+              <span class="ic">findOneAndUpdate()</span> or
+              <span class="ic">findByIdAndUpdate()</span> to
+              <strong>create the document if it doesn't exist</strong>. Without
+              it, if the filter matches nothing, the method just returns
+              <span class="ic">null</span> and does nothing.
+            </p>
+          </div>
+          <div class="card red">
+            <div class="card-title">runValidators: false (default)</div>
+            <p>
+              Mongoose validators (<span class="ic">required</span>,
+              <span class="ic">minLength</span>) only run on
+              <span class="ic">.save()</span> by default. Update methods skip
+              validators unless you explicitly pass
+              <span class="ic">&#123; runValidators: true &#125;</span>.
+            </p>
+          </div>
+        </div>
+
+        <div class="code-wrapper">
+          <div class="code-header">
+            <div class="code-dots">
+              <div class="code-dot dot-r"></div>
+              <div class="code-dot dot-y"></div>
+              <div class="code-dot dot-g"></div>
+            </div>
+            <span class="code-lang"
+              >JavaScript — All Query Methods in Practice</span
+            ><button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><code><span class="cm">// ===== find() — always returns an Array, never null =====</span>
+<span class="kw">let</span> <span class="obj">allUsers</span>    <span class="op">=</span> <span class="kw">await</span> <span class="obj">UserModel</span>.<span class="fn">find</span>();
+<span class="kw">let</span> <span class="obj">activeUsers</span> <span class="op">=</span> <span class="kw">await</span> <span class="obj">UserModel</span>.<span class="fn">find</span>({ <span class="prop">active</span>: <span class="kw">true</span> });
+<span class="kw">let</span> <span class="obj">names</span>       <span class="op">=</span> <span class="kw">await</span> <span class="obj">UserModel</span>.<span class="fn">find</span>({}, <span class="str">"name email"</span>); <span class="cm">// field projection</span>
+<span class="cm">// find() returns [] if nothing matches — no null check needed</span>
+
+<span class="cm">// ===== findOne() — returns single doc or null =====</span>
+<span class="kw">let</span> <span class="obj">user</span> <span class="op">=</span> <span class="kw">await</span> <span class="obj">UserModel</span>.<span class="fn">findOne</span>({ <span class="prop">email</span>: <span class="str">"user@example.com"</span> });
+<span class="kw">if</span> (!<span class="obj">user</span>) <span class="kw">return</span> <span class="obj">res</span>.<span class="fn">status</span>(<span class="num">404</span>).<span class="fn">json</span>({ <span class="prop">message</span>: <span class="str">"User not found"</span> });
+
+<span class="cm">// ===== findById() — same as findOne({ _id: id }) =====</span>
+<span class="kw">let</span> <span class="obj">userById</span> <span class="op">=</span> <span class="kw">await</span> <span class="obj">UserModel</span>.<span class="fn">findById</span>(<span class="prop">req</span>.<span class="prop">params</span>.<span class="prop">id</span>); <span class="cm">// doc or null</span>
+
+<span class="cm">// ===== findByIdAndUpdate() — default returns OLD document =====</span>
+<span class="kw">let</span> <span class="obj">oldDoc</span> <span class="op">=</span> <span class="kw">await</span> <span class="obj">UserModel</span>.<span class="fn">findByIdAndUpdate</span>(
+  <span class="prop">req</span>.<span class="prop">params</span>.<span class="prop">id</span>,
+  { <span class="prop">$set</span>: { <span class="prop">name</span>: <span class="str">"New Name"</span> } }
+);
+<span class="cm">// oldDoc.name is STILL the original name — the update already happened in DB</span>
+<span class="cm">// but this variable holds the pre-update snapshot</span>
+
+<span class="cm">// ✓ Pass { new: true } to get the UPDATED document back</span>
+<span class="kw">let</span> <span class="obj">updatedDoc</span> <span class="op">=</span> <span class="kw">await</span> <span class="obj">UserModel</span>.<span class="fn">findByIdAndUpdate</span>(
+  <span class="prop">req</span>.<span class="prop">params</span>.<span class="prop">id</span>,
+  { <span class="prop">$set</span>: { <span class="prop">name</span>: <span class="str">"New Name"</span> } },
+  { <span class="prop">new</span>: <span class="kw">true</span>, <span class="prop">runValidators</span>: <span class="kw">true</span> }
+);
+<span class="cm">// updatedDoc.name is now "New Name" ✓</span>
+
+<span class="cm">// ===== findOneAndUpdate() — filter by any field, not just _id =====</span>
+<span class="kw">let</span> <span class="obj">updated</span> <span class="op">=</span> <span class="kw">await</span> <span class="obj">ProductModel</span>.<span class="fn">findOneAndUpdate</span>(
+  { <span class="prop">sku</span>: <span class="str">"ABC123"</span> },
+  { <span class="prop">$inc</span>: { <span class="prop">stock</span>: <span class="op">-</span><span class="num">1</span> } },
+  { <span class="prop">new</span>: <span class="kw">true</span> }
+);
+
+<span class="cm">// ===== findByIdAndDelete() — removes doc, returns the deleted doc =====</span>
+<span class="kw">let</span> <span class="obj">deleted</span> <span class="op">=</span> <span class="kw">await</span> <span class="obj">UserModel</span>.<span class="fn">findByIdAndDelete</span>(<span class="prop">req</span>.<span class="prop">params</span>.<span class="prop">id</span>);
+<span class="kw">if</span> (!<span class="obj">deleted</span>) <span class="kw">return</span> <span class="obj">res</span>.<span class="fn">status</span>(<span class="num">404</span>).<span class="fn">json</span>({ <span class="prop">message</span>: <span class="str">"Not found"</span> });
+<span class="cm">// deleted holds the document that WAS in the DB before deletion</span>
+
+<span class="cm">// ===== .select() — field projection on find/findOne/findById =====</span>
+<span class="kw">let</span> <span class="obj">safeUser</span> <span class="op">=</span> <span class="kw">await</span> <span class="obj">UserModel</span>
+  .<span class="fn">findById</span>(<span class="prop">id</span>)
+  .<span class="fn">select</span>(<span class="str">"-password -__v"</span>); <span class="cm">// "-" prefix = exclude these fields</span></code></pre>
+        </div>
+
+        <div class="note-box">
+          <strong>// Quick return reference:</strong><br />
+          • <span class="ic">find()</span> → always an
+          <strong>Array</strong> (empty array if no match — never null)<br />
+          • <span class="ic">findOne()</span> /
+          <span class="ic">findById()</span> → <strong>document</strong> or
+          <strong>null</strong><br />
+          • <span class="ic">findByIdAndUpdate()</span> →
+          <strong>old doc</strong> by default | <strong>new doc</strong> with
+          <span class="ic">new: true</span> | <strong>null</strong> if not
+          found<br />
+          • <span class="ic">findOneAndUpdate()</span> → same as above, but
+          filter by any field<br />
+          • <span class="ic">findByIdAndDelete()</span> → the
+          <strong>deleted doc</strong> | <strong>null</strong> if not found
+        </div>
+        <div class="divider"></div>
 
         <h3
           style="
@@ -1046,7 +2606,7 @@ mongoose.<span class="fn">connect</span>(<span class="str">"mongodb+srv://&lt;us
             letter-spacing: -0.5px;
           "
         >
-          DB <span style="color: var(--accent3)">Connection Pattern</span>
+          10c-DB <span style="color: var(--accent3)">Connection Pattern</span>
         </h3>
         <p class="topic-prose">
           The correct pattern is to wrap the MongoDB connection in an
@@ -2845,37 +4405,46 @@ npm install react-router
               <div class="code-dot dot-y"></div>
               <div class="code-dot dot-g"></div>
             </div>
-            <span class="code-lang"
-              >JSX — Setting Up Routes in main.jsx / App.jsx</span
-            >
+            <span class="code-lang">JSX — Setting Up Routes (main.jsx)</span>
             <button class="copy-btn" onclick="copyCode(this)">Copy</button>
           </div>
-          <pre><code><span class="kw">import</span> { <span class="fn">createBrowserRouter</span>, <span class="fn">RouterProvider</span> } <span class="kw">from</span> <span class="str">'react-router'</span>;
-<span class="kw">import</span> <span class="obj">RootLayout</span> <span class="kw">from</span> <span class="str">'./RootLayout'</span>;
-<span class="kw">import</span> <span class="obj">Home</span> <span class="kw">from</span> <span class="str">'./Home'</span>;
-<span class="kw">import</span> { <span class="fn">Navigate</span> } <span class="kw">from</span> <span class="str">'react-router'</span>;
+          <pre><code><span class="kw">import</span> { <span class="fn">createBrowserRouter</span>, <span class="fn">RouterProvider</span>, <span class="fn">Navigate</span> } <span class="kw">from</span> <span class="str">'react-router'</span>;
 
 <span class="kw">const</span> <span class="obj">router</span> <span class="op">=</span> <span class="fn">createBrowserRouter</span>([
   {
     <span class="prop">path</span>: <span class="str">"/"</span>,
-    <span class="prop">element</span>: <span class="str">&lt;RootLayout /&gt;</span>,    <span class="cm">// Persistent shell with &lt;Outlet /&gt;</span>
+    <span class="prop">element</span>: &lt;<span class="fn">RootLayout</span> /&gt;,
     <span class="prop">children</span>: [
-      {
-        <span class="prop">path</span>: <span class="str">""</span>,
-        <span class="prop">element</span>: <span class="str">&lt;Navigate to="home" /&gt;</span>  <span class="cm">// Redirect "/" → "/home"</span>
-      },
-      { <span class="prop">path</span>: <span class="str">"home"</span>,     <span class="prop">element</span>: <span class="str">&lt;Home /&gt;</span>     },
-      { <span class="prop">path</span>: <span class="str">"register"</span>, <span class="prop">element</span>: <span class="str">&lt;Register /&gt;</span> },
-      { <span class="prop">path</span>: <span class="str">"login"</span>,    <span class="prop">element</span>: <span class="str">&lt;Login /&gt;</span>    },
-      { <span class="prop">path</span>: <span class="str">"products"</span>, <span class="prop">element</span>: <span class="str">&lt;Products /&gt;</span> },
+
+      <span class="cm">// ⚠ WHITE PAGE FIX — without this, "/" shows RootLayout with empty Outlet</span>
+      <span class="cm">// Option A: path:"" redirects "/" to first route</span>
+      { <span class="prop">path</span>: <span class="str">""</span>, <span class="prop">element</span>: &lt;<span class="fn">Navigate</span> <span class="prop">to</span>=<span class="str">"home"</span> /&gt; },
+
+      <span class="cm">// Option B: index:true — marks the default child, cleaner syntax (same result)</span>
+      <span class="cm">// { index: true, element: &lt;Home /&gt; }</span>
+
+      { <span class="prop">path</span>: <span class="str">"home"</span>,     <span class="prop">element</span>: &lt;<span class="fn">Home</span> /&gt;     },
+      { <span class="prop">path</span>: <span class="str">"register"</span>, <span class="prop">element</span>: &lt;<span class="fn">Register</span> /&gt; },
+      { <span class="prop">path</span>: <span class="str">"login"</span>,    <span class="prop">element</span>: &lt;<span class="fn">Login</span> /&gt;    },
+      { <span class="prop">path</span>: <span class="str">"products"</span>, <span class="prop">element</span>: &lt;<span class="fn">Products</span> /&gt; },
     ]
   }
 ]);
 
-<span class="cm">// In main.jsx or App.jsx:</span>
 <span class="kw">export default function</span> <span class="fn">App</span>() {
   <span class="kw">return</span> &lt;<span class="fn">RouterProvider</span> <span class="prop">router</span>={<span class="obj">router</span>} /&gt;;
 }</code></pre>
+        </div>
+
+        <div class="warn-box">
+          <strong>⚠ White Page Problem:</strong> When the app loads at
+          <span class="ic">/</span>, it renders
+          <span class="ic">RootLayout</span> — but which child fills the
+          <span class="ic">&lt;Outlet /&gt;</span>? Nothing! Blank page. Fix:
+          add <span class="ic">path: ""</span> with a
+          <span class="ic">&lt;Navigate&gt;</span> redirect, or use
+          <span class="ic">index: true</span> to mark which child loads by
+          default.
         </div>
 
         <div class="code-wrapper">
@@ -2914,6 +4483,15 @@ npm install react-router
     &lt;/<span class="fn">div</span>&gt;
   );
 }</code></pre>
+        </div>
+
+        <div class="note-box">
+          <strong>// Outlet at every level:</strong> If a route has its own
+          <span class="ic">children</span>, the parent component
+          <strong>must</strong> render
+          <span class="ic">&lt;Outlet /&gt;</span> somewhere inside it —
+          otherwise child routes have nowhere to render. This applies at every
+          nesting level, not just the root.
         </div>
 
         <div class="divider"></div>
@@ -2992,7 +4570,13 @@ npm install react-router
   };
 
   <span class="kw">return</span> (
-    &lt;<span class="fn">div</span> <span class="prop">onClick</span>={() <span class="op">=></span> <span class="fn">gotoProduct</span>(<span class="prop">item</span>)}&gt;...&lt;/<span class="fn">div</span>&gt;
+    &lt;<span class="fn">div</span>&gt;
+      <span class="cm">{/* Function NEEDS a parameter → wrap in arrow to pass the value */}</span>
+      &lt;<span class="fn">div</span> <span class="prop">onClick</span>={() <span class="op">=></span> <span class="fn">gotoProduct</span>(<span class="prop">item</span>)}&gt;Click me&lt;/<span class="fn">div</span>&gt;
+
+      <span class="cm">{/* Function has NO parameters → pass directly, no wrapper needed */}</span>
+      &lt;<span class="fn">button</span> <span class="prop">onClick</span>={<span class="obj">handleClose</span>}&gt;Close&lt;/<span class="fn">button</span>&gt;
+    &lt;/<span class="fn">div</span>&gt;
   );
 }
 
@@ -3199,7 +4783,9 @@ npm install react-router
           becomes painful (<strong>prop drilling</strong>). State management
           solutions create a
           <strong>shared store outside the component tree</strong> so any
-          component can read or update state directly.
+          component can read or update state directly. It means sharing the
+          state across the application and achieve sync in state across the
+          application
         </p>
 
         <!-- THE PROBLEM -->
@@ -3385,7 +4971,13 @@ npm install zustand
           and simpler code. <span class="ic">Redux Toolkit</span> = large
           enterprise apps needing strict patterns and devtools.
         </div>
-
+        <div class="note-box">
+          <strong>// Key points:</strong>
+          Do not directly call the useTest hook; instead, extract only the
+          specific state(s) you need. With Zustand, select the required states
+          per component so that updates only re-render components using those
+          states, avoiding unnecessary renders.
+        </div>
         <div class="warn-box">
           <strong>⚠ Context API re-render trap:</strong> Every component
           consuming a context re-renders when <strong>any part</strong> of the
@@ -3439,6 +5031,7 @@ npm install zustand
               across renders unlike a regular variable which resets every time.
             </p>
           </div>
+
           <div class="card blue">
             <div class="card-title">Two Main Uses</div>
             <p>
@@ -3451,6 +5044,27 @@ npm install zustand
               without causing re-renders — e.g. previous state, timer IDs,
               interval references.
             </p>
+          </div>
+
+          <div class="card green">
+            <div class="card-title">useRef Hook Explained</div>
+            <p>
+              <span class="ic">useRef</span> is used to access the reference of
+              the real DOM directly.
+            </p>
+            <p>
+              <strong>Reasons to use:</strong> If some action needs to happen
+              instantly (improving user experience), to maintain previous
+              values, or when changes occur but the component should not
+              re-render.
+            </p>
+            <p>
+              <strong>ref attribute:</strong> Connects reference elements like
+              <span class="ic"
+                >&lt;input ref=&#123;inputRef&#125; type="text" /&gt;</span
+              >.
+            </p>
+            <br />
           </div>
         </div>
 
@@ -3496,6 +5110,12 @@ npm install zustand
 <span class="cm">// useState  → triggers re-render when updated</span>
 <span class="cm">// useRef    → NEVER triggers re-render, value just silently updates</span></code></pre>
         </div>
+        <p>
+          <strong>Extra Info:</strong> Unlike <span class="ic">useState</span>,
+          updating <span class="ic">ref.current</span> does not cause a
+          re-render. This makes it ideal for storing mutable values like DOM
+          nodes, timers, or previous state snapshots.
+        </p>
 
         <div class="divider"></div>
 
@@ -4245,6 +5865,119 @@ console.<span class="fn">log</span>(<span class="fn">Number</span>.<span class="
     >
       ↑
     </button>
-    <script src="script.js"></script>
+
+    <script
+      data-cfasync="false"
+      src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"
+    ></script>
+    <script
+      data-cfasync="false"
+      src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"
+    ></script>
+    <script>
+      // Progress bar
+      const progress = document.getElementById("progress");
+      window.addEventListener("scroll", () => {
+        const scrolled =
+          window.scrollY / (document.body.scrollHeight - window.innerHeight);
+        progress.style.width = scrolled * 100 + "%";
+        document
+          .getElementById("back-top")
+          .classList.toggle("show", window.scrollY > 400);
+      });
+
+      // Intersection Observer for section animations
+      const sections = document.querySelectorAll(".section");
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting) e.target.classList.add("visible");
+          });
+        },
+        { threshold: 0.08 },
+      );
+      sections.forEach((s) => observer.observe(s));
+
+      // Active nav highlight
+      const navItems = document.querySelectorAll(".nav-item");
+      const sectionEls = document.querySelectorAll("section.section");
+
+      const navObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting) {
+              navItems.forEach((n) => n.classList.remove("active"));
+              const active = document.querySelector(
+                `.nav-item[href="#${e.target.id}"]`,
+              );
+              if (active) active.classList.add("active");
+            }
+          });
+        },
+        { threshold: 0.4 },
+      );
+      sectionEls.forEach((s) => navObserver.observe(s));
+
+      // Copy button
+      function copyCode(btn) {
+        const code = btn
+          .closest(".code-wrapper")
+          .querySelector("pre").innerText;
+        navigator.clipboard.writeText(code).then(() => {
+          const orig = btn.textContent;
+          btn.textContent = "Copied!";
+          btn.style.borderColor = "var(--accent)";
+          btn.style.color = "var(--accent)";
+          setTimeout(() => {
+            btn.textContent = orig;
+            btn.style.borderColor = "";
+            btn.style.color = "";
+          }, 1500);
+        });
+      }
+
+      // Mobile menu
+      const menuToggle = document.getElementById("menuToggle");
+      const sidebar = document.getElementById("sidebar");
+      menuToggle.addEventListener("click", () =>
+        sidebar.classList.toggle("open"),
+      );
+      document.addEventListener("click", (e) => {
+        if (!sidebar.contains(e.target) && e.target !== menuToggle) {
+          sidebar.classList.remove("open");
+        }
+      });
+
+      // Search
+      const searchInput = document.getElementById("searchInput");
+      const allNavItems = document.querySelectorAll(".nav-item");
+      searchInput.addEventListener("input", () => {
+        const q = searchInput.value.toLowerCase().trim();
+
+        allNavItems.forEach((item) => {
+          const text = item.textContent.toLowerCase();
+          const match = !q || text.includes(q);
+          item.style.display = match ? "block" : "none";
+        });
+
+        // Hide section headers if all their items are hidden
+        document.querySelectorAll(".nav-section").forEach((header) => {
+          let next = header.nextElementSibling;
+          let hasVisible = false;
+          while (next && !next.classList.contains("nav-section")) {
+            if (next.style.display !== "none") hasVisible = true;
+            next = next.nextElementSibling;
+          }
+          le.display = hasVisible ? "block" : "none";
+        });
+
+        // If query cleared, restore all section headers
+        if (!q) {
+          document
+            .querySelectorAll(".nav-section")
+            .forEach((h) => (h.style.display = "block"));
+        }
+      });
+    </script>
   </body>
 </html>
