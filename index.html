@@ -1034,11 +1034,13 @@
         <a href="#react-forms" class="nav-item" data-num="16">Form Handling</a>
         <a href="#react-effects" class="nav-item" data-num="17">useEffect</a>
         <a href="#react-routing" class="nav-item" data-num="18">React Router</a>
-        <a href="#state-management" class="nav-item" data-num="19"
+        <a href="#api-requests" class="nav-item" data-num="19">API Requests (fetch & axios)</a>
+    <a href="#react-fragments-toast" class="nav-item" data-num="19b">Fragments & Toasts</a>
+        <a href="#state-management" class="nav-item" data-num="20"
           >State Management</a
         >
         <div class="nav-section">Advanced React</div>
-        <a href="#react-hooks" class="nav-item" data-num="20"
+        <a href="#react-hooks" class="nav-item" data-num="21"
           >Hooks Deep Dive</a
         >
         <div class="nav-section">Interview Prep</div>
@@ -4819,11 +4821,166 @@ npm install react-router
           substring search.
         </div>
       </section>
+      <section class="section" id="api-requests">
 
-      <!-- ======================== SECTION 19: STATE MANAGEMENT ======================== -->
+        <!-- section 19 -->
+    <h2>19 — API Requests from Components</h2>
+    <p>There are two main ways to make HTTP requests from a React component: the built-in <code>fetch</code> API and the third-party <code>axios</code> library.</p>
+
+    <h3 style="margin:1.5rem 0 .75rem">1. fetch (built-in)</h3>
+    <p>Native browser API — no install needed. More verbose; you handle headers, body serialization, and error detection manually.</p>
+
+    <pre><code><span class="cm">// GET request — method defaults to "GET" if omitted</span>
+<span class="kw">const</span> res  = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">"https://api.example.com/data"</span>, { method: <span class="str">"GET"</span> });
+<span class="kw">const</span> data = <span class="kw">await</span> res.<span class="fn">json</span>();  <span class="cm">// must manually extract JSON</span>
+<span class="cm">// data → { message: "", payload: "" }  — you destructure yourself</span>
+
+<span class="cm">// fetch only rejects on network failure, NOT on 4xx/5xx — check manually:</span>
+<span class="kw">if</span> (!res.ok) <span class="kw">throw new</span> <span class="fn">Error</span>(<span class="str">`HTTP error: ${res.status}`</span>);
+
+<span class="cm">// POST request</span>
+<span class="kw">const</span> resObj = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">"https://api.example.com/users"</span>, {
+  method:  <span class="str">"POST"</span>,
+  headers: { <span class="str">"Content-Type"</span>: <span class="str">"application/json"</span> },  <span class="cm">// must set manually</span>
+  body:    JSON.<span class="fn">stringify</span>({ name: <span class="str">"Alice"</span>, age: <span class="num">25</span> }),  <span class="cm">// must serialise manually</span>
+});
+<span class="kw">if</span> (!resObj.ok) <span class="kw">throw new</span> <span class="fn">Error</span>(<span class="str">"Request failed"</span>);
+<span class="kw">const</span> created = <span class="kw">await</span> resObj.<span class="fn">json</span>();</code></pre>
+
+    <div class="info-box warn" style="margin:.75rem 0">
+      ⚠️ <strong>fetch does NOT throw on 4xx/5xx.</strong> A 404 or 500 response is still a "resolved" promise. Always check <code>res.ok</code> (true when status 200–299) or compare <code>res.status</code> manually.
+    </div>
+
+    <h3 style="margin:1.5rem 0 .75rem">2. axios (third-party)</h3>
+    <p>Install: <code>npm i axios</code> — then import per file. Less verbose, auto-parses JSON, and automatically throws on 4xx/5xx responses.</p>
+
+    <pre><code><span class="kw">import</span> axios <span class="kw">from</span> <span class="str">"axios"</span>;
+
+<span class="cm">// GET request</span>
+<span class="kw">const</span> resObj = <span class="kw">await</span> axios.<span class="fn">get</span>(<span class="str">"https://api.example.com/data"</span>);
+<span class="kw">const</span> data   = resObj.data;  <span class="cm">// JSON already extracted — no .json() call needed</span>
+
+<span class="cm">// POST request — pass object directly, axios serialises it automatically</span>
+<span class="kw">const</span> resObj2 = <span class="kw">await</span> axios.<span class="fn">post</span>(<span class="str">"https://api.example.com/users"</span>, { name: <span class="str">"Alice"</span>, age: <span class="num">25</span> });
+<span class="kw">const</span> created  = resObj2.data;
+
+<span class="cm">// Accessing a protected route — send JWT in Authorization header</span>
+<span class="kw">const</span> token = localStorage.<span class="fn">getItem</span>(<span class="str">"token"</span>);
+<span class="kw">const</span> profile = <span class="kw">await</span> axios.<span class="fn">get</span>(<span class="str">"/api/profile"</span>, {
+  headers: { Authorization: <span class="str">`Bearer ${token}`</span> },
+});
+
+<span class="cm">// Error handling — axios throws on 4xx/5xx automatically</span>
+<span class="kw">try</span> {
+  <span class="kw">const</span> res = <span class="kw">await</span> axios.<span class="fn">get</span>(<span class="str">"/api/secret"</span>);
+} <span class="kw">catch</span> (err) {
+  console.<span class="fn">log</span>(err.response.status);   <span class="cm">// e.g. 401</span>
+  console.<span class="fn">log</span>(err.response.data);     <span class="cm">// server error body</span>
+  console.<span class="fn">log</span>(err.message);           <span class="cm">// human-readable message</span>
+}</code></pre>
+
+    <h3 style="margin:1.5rem 0 .75rem">fetch vs axios — quick comparison</h3>
+    <table style="width:100%;border-collapse:collapse;font-size:.9rem">
+      <thead>
+        <tr style="background:var(--accent);color:#fff">
+          <th style="padding:.5rem .75rem;text-align:left">Feature</th>
+          <th style="padding:.5rem .75rem;text-align:left">fetch</th>
+          <th style="padding:.5rem .75rem;text-align:left">axios</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom:1px solid var(--border)"><td style="padding:.45rem .75rem">Install needed</td><td>❌ built-in</td><td>✅ npm i axios</td></tr>
+        <tr style="border-bottom:1px solid var(--border)"><td style="padding:.45rem .75rem">Auto JSON parse</td><td>❌ call .json()</td><td>✅ resObj.data</td></tr>
+        <tr style="border-bottom:1px solid var(--border)"><td style="padding:.45rem .75rem">Throws on 4xx/5xx</td><td>❌ manual check</td><td>✅ automatic</td></tr>
+        <tr style="border-bottom:1px solid var(--border)"><td style="padding:.45rem .75rem">Set Content-Type</td><td>❌ manual</td><td>✅ automatic</td></tr>
+        <tr style="border-bottom:1px solid var(--border)"><td style="padding:.45rem .75rem">Stringify body</td><td>❌ JSON.stringify()</td><td>✅ automatic</td></tr>
+        <tr><td style="padding:.45rem .75rem">Error object</td><td>basic Error</td><td>err.response.data/status</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="section" id="react-fragments-toast">
+    <h2>19b — React Fragments &amp; Toast Notifications</h2>
+
+    <h3 style="margin:1.5rem 0 .75rem">React Fragment <code>&lt;&gt;&lt;/&gt;</code></h3>
+    <p>A Fragment lets you group multiple sibling elements without adding an extra DOM node. Use it when a wrapper <code>&lt;div&gt;</code> would break layout or add unwanted styling.</p>
+
+    <pre><code><span class="cm">// Without fragment — adds an unnecessary div to the DOM</span>
+<span class="kw">return</span> (
+  &lt;div&gt;
+    &lt;h1&gt;Title&lt;/h1&gt;
+    &lt;p&gt;Subtitle&lt;/p&gt;
+  &lt;/div&gt;
+);
+
+<span class="cm">// With fragment — no extra DOM node</span>
+<span class="kw">return</span> (
+  &lt;&gt;
+    &lt;h1&gt;Title&lt;/h1&gt;
+    &lt;p&gt;Subtitle&lt;/p&gt;
+  &lt;/&gt;
+);
+
+<span class="cm">// Long-form (needed if you want to pass a key prop, e.g. in lists)</span>
+<span class="kw">import</span> { Fragment } <span class="kw">from</span> <span class="str">"react"</span>;
+items.<span class="fn">map</span>(item =&gt; (
+  &lt;Fragment key={item.id}&gt;
+    &lt;dt&gt;{item.term}&lt;/dt&gt;
+    &lt;dd&gt;{item.def}&lt;/dd&gt;
+  &lt;/Fragment&gt;
+));</code></pre>
+
+    <div class="info-box" style="margin:.75rem 0">
+      💡 <strong>Rule of thumb:</strong> if the parent wrapper has no className, id, or event handler — use <code>&lt;&gt;&lt;/&gt;</code> instead.
+    </div>
+
+    <h3 style="margin:1.5rem 0 .75rem">Toast Notifications — react-hot-toast</h3>
+    <p>Toasts are small, auto-dismissing UI messages used to give the user non-blocking feedback (success, error, loading, etc.).</p>
+
+    <pre><code><span class="cm">// 1. Install</span>
+npm i react-hot-toast
+
+<span class="cm">// 2. Add &lt;Toaster&gt; once in your root component (App.jsx)</span>
+<span class="kw">import</span> { Toaster } <span class="kw">from</span> <span class="str">"react-hot-toast"</span>;
+
+<span class="kw">function</span> <span class="fn">App</span>() {
+  <span class="kw">return</span> (
+    &lt;&gt;
+      &lt;Toaster position=<span class="str">"top-right"</span> reverseOrder={<span class="kw">false</span>} /&gt;
+      <span class="cm">{/* rest of your app */}</span>
+    &lt;/&gt;
+  );
+}
+
+<span class="cm">// 3. Trigger toasts from any component</span>
+<span class="kw">import</span> { toast } <span class="kw">from</span> <span class="str">"react-hot-toast"</span>;
+
+toast.<span class="fn">success</span>(<span class="str">"Logged in successfully!"</span>);   <span class="cm">// green ✓</span>
+toast.<span class="fn">error</span>(<span class="str">"Invalid credentials"</span>);          <span class="cm">// red ✗</span>
+toast.<span class="fn">loading</span>(<span class="str">"Submitting..."</span>);             <span class="cm">// spinner</span>
+<span class="fn">toast</span>(<span class="str">"Copied to clipboard"</span>);               <span class="cm">// neutral</span>
+
+<span class="cm">// Promise toast — auto switches loading → success/error</span>
+toast.<span class="fn">promise</span>(
+  axios.<span class="fn">post</span>(<span class="str">"/api/login"</span>, credentials),
+  {
+    loading: <span class="str">"Logging in..."</span>,
+    success: <span class="str">"Welcome back!"</span>,
+    error:   <span class="str">"Login failed"</span>,
+  }
+);</code></pre>
+
+    <div class="info-box" style="margin:.75rem 0">
+      📌 <strong>position options:</strong> <code>"top-left"</code>, <code>"top-center"</code>, <code>"top-right"</code>, <code>"bottom-left"</code>, <code>"bottom-center"</code>, <code>"bottom-right"</code><br>
+      <strong>reverseOrder</strong> — when <code>true</code>, new toasts stack below older ones instead of above.
+    </div>
+  </section>
+
+
+      <!-- ======================== SECTION 20: STATE MANAGEMENT ======================== -->
       <section class="section" id="state-management">
         <div class="section-label">
-          <span class="section-num">19 — State Management</span>
+          <span class="section-num">20 — State Management</span>
           <div class="section-line"></div>
         </div>
         <h2 class="section-title">State <span class="hl4">Management</span></h2>
@@ -5036,10 +5193,10 @@ npm install zustand
         </div>
       </section>
 
-      <!-- ======================== SECTION 20: HOOKS DEEP DIVE ======================== -->
+      <!-- ======================== SECTION 21: HOOKS DEEP DIVE ======================== -->
       <section class="section" id="react-hooks">
         <div class="section-label">
-          <span class="section-num">20 — Hooks Deep Dive</span>
+          <span class="section-num">21 — Hooks Deep Dive</span>
           <div class="section-line"></div>
         </div>
         <h2 class="section-title">
@@ -5523,7 +5680,7 @@ npm install zustand
         </div>
       </section>
 
-      <!-- ======================== SECTION 21: INTERVIEW Qs ======================== -->
+      <!-- ======================== SECTION 22: INTERVIEW Qs ======================== -->
       <section class="section" id="interview-qs">
         <div class="section-label">
           <span class="section-num">⚡ — Interview</span>
